@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { getGreeting } from '@/lib/formatters';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNotifications } from '@/contexts/NotificationContext';
 
 export function Header() {
   const { theme, toggleTheme } = useTheme();
   const { signOut } = useAuth();
+  const { unreadCount, markAllAsRead } = useNotifications();
   const [showGreeting, setShowGreeting] = useState(true);
   const greeting = getGreeting();
 
@@ -45,9 +47,16 @@ export function Header() {
               <Moon className="h-5 w-5" />
             )}
           </Button>
-          <Button variant="ghost" size="icon" className="relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative"
+            onClick={markAllAsRead}
+          >
             <Bell className="h-5 w-5" />
-            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-destructive" />
+            {unreadCount > 0 && (
+              <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full border-2 border-card bg-destructive animate-in zoom-in" />
+            )}
           </Button>
           <Button variant="ghost" size="icon" onClick={() => signOut()}>
             <LogOut className="h-5 w-5 text-muted-foreground" />

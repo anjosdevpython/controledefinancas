@@ -4,6 +4,7 @@ import { defaultCategories } from '@/data/categories';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
+import { useNotifications } from './NotificationContext';
 
 interface FinanceContextType {
   transactions: Transaction[];
@@ -29,6 +30,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   const [categories] = useState<Category[]>(defaultCategories);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { addNotification } = useNotifications();
 
   const fetchData = async () => {
     if (!user) return;
@@ -113,6 +115,11 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         };
         setTransactions(prev => [newTransaction, ...prev]);
         toast.success('Transação adicionada!');
+        addNotification({
+          title: transaction.type === 'income' ? 'Nova Receita' : 'Nova Despesa',
+          message: `${transaction.description || 'Sem descrição'}: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(transaction.amount)}`,
+          type: 'success'
+        });
       }
     } catch (error: any) {
       toast.error('Erro ao salvar transação: ' + error.message);
@@ -158,6 +165,11 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         };
         setGoals(prev => [newGoal, ...prev]);
         toast.success('Meta criada com sucesso!');
+        addNotification({
+          title: 'Nova Meta Financeira',
+          message: `O objetivo "${goal.name}" foi criado com sucesso!`,
+          type: 'success'
+        });
       }
     } catch (error: any) {
       toast.error('Erro ao salvar meta: ' + error.message);
@@ -196,6 +208,11 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       setGoals(prev =>
         prev.map(g => (g.id === id ? { ...g, currentAmount: newAmount } : g))
       );
+      addNotification({
+        title: 'Progresso na Meta',
+        message: `Você guardou ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount)} para "${goal.name}"!`,
+        type: 'success'
+      });
     } catch (error: any) {
       toast.error('Erro ao atualizar meta: ' + error.message);
     }
