@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useFinance } from '@/contexts/FinanceContext';
-import { getGeminiFinancialTip } from '@/services/gemini';
+import { getAIFinancialTip } from '@/services/ai';
 
 export function InsightCard() {
   const { transactions, getFinancialSummary } = useFinance();
@@ -14,7 +14,7 @@ export function InsightCard() {
       setLoading(true);
       try {
         const summary = getFinancialSummary();
-        const tip = await getGeminiFinancialTip(summary);
+        const tip = await getAIFinancialTip(summary);
         setAiTip(tip);
       } catch (error) {
         console.error('Failed to fetch AI tip:', error);
@@ -44,7 +44,7 @@ export function InsightCard() {
   }
 
   const hasData = transactions.length > 0;
-
+  
   const displayTip = aiTip || 'Comece a registrar suas transações para receber dicas personalizadas do seu Anjo Financeiro!';
   const title = hasData ? 'Dica da IA' : 'Dica do dia';
 
@@ -59,7 +59,7 @@ export function InsightCard() {
             <p className="font-bold text-base tracking-tight">{title}</p>
             {hasData && (
               <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-black uppercase text-primary tracking-wider">
-                Gemini AI
+                ChatGPT
               </span>
             )}
           </div>
