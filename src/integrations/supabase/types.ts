@@ -9,6 +9,66 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          id: string
+          created_at: string
+          name: string
+          type: string
+          balance: number
+          color: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          name: string
+          type: string
+          balance?: number
+          color?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          name?: string
+          type?: string
+          balance?: number
+          color?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      categories: {
+        Row: {
+          id: string
+          created_at: string
+          name: string
+          icon: string
+          color: string | null
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          name: string
+          icon: string
+          color?: string | null
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          name?: string
+          icon?: string
+          color?: string | null
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           id: string
@@ -16,10 +76,12 @@ export type Database = {
           type: string
           amount: number
           category_id: string
+          account_id: string | null
           date: string
           description: string | null
           payment_method: string | null
           user_id: string | null
+          goal_id: string | null
         }
         Insert: {
           id?: string
@@ -27,10 +89,12 @@ export type Database = {
           type: string
           amount: number
           category_id: string
+          account_id?: string | null
           date: string
           description?: string | null
           payment_method?: string | null
           user_id?: string | null
+          goal_id?: string | null
         }
         Update: {
           id?: string
@@ -38,12 +102,36 @@ export type Database = {
           type?: string
           amount?: number
           category_id?: string
+          account_id?: string | null
           date?: string
           description?: string | null
           payment_method?: string | null
           user_id?: string | null
+          goal_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transactions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       goals: {
         Row: {
@@ -56,6 +144,7 @@ export type Database = {
           icon: string | null
           color: string | null
           user_id: string | null
+          sub_goals: Json | null
         }
         Insert: {
           id?: string
@@ -67,6 +156,7 @@ export type Database = {
           icon?: string | null
           color?: string | null
           user_id?: string | null
+          sub_goals?: Json | null
         }
         Update: {
           id?: string
@@ -78,6 +168,7 @@ export type Database = {
           icon?: string | null
           color?: string | null
           user_id?: string | null
+          sub_goals?: Json | null
         }
         Relationships: []
       }

@@ -47,7 +47,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     queryFn: async () => {
       if (!user) return [];
       try {
-        const { data, error } = await (supabase.from('categories' as any) as any)
+        const { data, error } = await supabase
+          .from('categories')
           .select('*')
           .eq('user_id', user.id);
         if (error) throw error;
@@ -76,7 +77,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     queryFn: async () => {
       if (!user) return [];
       try {
-        const { data, error } = await (supabase.from('accounts' as any) as any)
+        const { data, error } = await supabase
+          .from('accounts')
           .select('*')
           .eq('user_id', user.id);
 
@@ -182,13 +184,53 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
   const addTransactionMutation = useMutation({
     mutationFn: async ({ transaction, goalId }: { transaction: Omit<Transaction, 'id'>, goalId?: string }) => {
+      let finalAccountId = transaction.accountId;
+
+      // Fix for 'invalid input syntax for type uuid: "default"'
+      console.log('DEBUG: accountId before check:', finalAccountId);
+      if (finalAccountId === 'default') {
+        console.log('DEBUG: processing default account...');
+        const { data: existingAccounts } = await (supabase.from('accounts' as any) as any)
+          .select('id')
+          .eq('user_id', user?.id)
+          .limit(1);
+
+        console.log('DEBUG: existing accounts found:', existingAccounts);
+
+        if (existingAccounts && existingAccounts.length > 0) {
+          finalAccountId = existingAccounts[0].id;
+          console.log('DEBUG: using existing account:', finalAccountId);
+        } else {
+          // Create default account if none exists
+          console.log('DEBUG: creating new account...');
+          const { data: newAccount, error: createError } = await (supabase.from('accounts' as any) as any)
+            .insert([{
+              name: 'Carteira Principal',
+              type: 'cash',
+              balance: 0,
+              color: '#8B5CF6',
+              user_id: user?.id
+            }])
+            .select()
+            .single();
+
+          if (createError) {
+            console.error('DEBUG: error creating account:', createError);
+            throw createError;
+          }
+          finalAccountId = newAccount.id;
+          console.log('DEBUG: created new account:', finalAccountId);
+        }
+      }
+      console.log('DEBUG: final accountId for insert:', finalAccountId);
+
       const { data, error } = await supabase
         .from('transactions')
         .insert([{
           type: transaction.type,
           amount: transaction.amount,
           category_id: transaction.category.id,
-          account_id: transaction.accountId,
+          account_id: finalAccountId,
           date: transaction.date,
           description: transaction.description,
           payment_method: transaction.paymentMethod,
@@ -211,6 +253,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       toast.success('Transação adicionada!');
     },
     onError: (error: any) => {
+      console.error(error);
       toast.error('Erro ao salvar transação: ' + error.message);
     }
   });
@@ -282,6 +325,25 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories', user?.id] });
       toast.success('Categoria excluída!');
+    }
+  });
+
+  const updateCategoryMutation = useMutation({
+    mutationFn: async ({ id, category }: { id: string, category: Partial<Category> }) => {
+      const { error } = await (supabase.from('categories' as any) as any)
+        .update({
+          name: category.name,
+          icon: category.icon,
+          color: category.color,
+          type: category.type
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories', user?.id] });
+      toast.success('Categoria atualizada!');
     }
   });
 
@@ -486,7 +548,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         deleteGoal: (id) => deleteGoalMutation.mutateAsync(id).then(() => { }),
         updateGoal: (id, amount, subGoalId) => updateGoalMutation.mutateAsync({ id, amount, subGoalId }).then(() => { }),
         addCategory: (c) => addCategoryMutation.mutateAsync(c).then(() => { }),
-        updateCategory: (id, c) => ({} as any), // Pending full CRUD
+        updateCategory: (id, c) => updateCategoryMutation.mutateAsync({ id, category: c }).then(() => { }),
         deleteCategory: (id) => deleteCategoryMutation.mutateAsync(id).then(() => { }),
         getTotalIncome,
         getTotalExpenses,

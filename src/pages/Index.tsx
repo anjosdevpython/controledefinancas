@@ -20,6 +20,7 @@ import { Crosshair, Plus, Zap, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Transaction } from '@/types/finance';
 import { FinancialCalendar } from '@/components/dashboard/FinancialCalendar';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 
 
@@ -213,7 +214,9 @@ function AppContent() {
 export default function Index() {
   return (
     <FinanceProvider>
-      <AppContent />
+      <ErrorBoundary>
+        <AppContent />
+      </ErrorBoundary>
     </FinanceProvider>
   );
 }

@@ -60,7 +60,7 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
       setErrors({});
       if (transactionToEdit) {
         setType(transactionToEdit.type);
-        setAmount(transactionToEdit.amount.toString().replace('.', ','));
+        setAmount(transactionToEdit.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 }));
         setCategoryId(transactionToEdit.category.id);
         setAccountId(transactionToEdit.accountId);
         setDate(transactionToEdit.date);
@@ -176,8 +176,22 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
   };
 
   const formatAmountInput = (value: string) => {
-    const numericValue = value.replace(/[^\d,]/g, '');
-    setAmount(numericValue);
+    // Remove everything that is not a digit
+    const onlyDigits = value.replace(/\D/g, '');
+
+    if (onlyDigits === '') {
+      setAmount('');
+      return;
+    }
+
+    // Convert to number (cents) and then to currency format
+    const numericValue = parseInt(onlyDigits, 10) / 100;
+    const formatted = numericValue.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+    setAmount(formatted);
     if (errors.amount) {
       setErrors(prev => ({ ...prev, amount: '' }));
     }
