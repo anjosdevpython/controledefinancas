@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Check, Save } from 'lucide-react';
+import { X, Check, Save, Trash2 } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -24,18 +24,20 @@ interface AddTransactionSheetProps {
 }
 
 export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: AddTransactionSheetProps) {
-  const { categories, addTransaction, updateTransaction } = useFinance();
+  const { categories, addTransaction, updateTransaction, deleteTransaction } = useFinance();
   const [type, setType] = useState<TransactionType>('expense');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [description, setDescription] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   const isEditing = !!transactionToEdit;
 
   useEffect(() => {
     if (open) {
+      setShowConfirmDelete(false);
       if (transactionToEdit) {
         setType(transactionToEdit.type);
         setAmount(transactionToEdit.amount.toString().replace('.', ','));
@@ -76,6 +78,13 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
     }
 
     onOpenChange(false);
+  };
+
+  const handleDelete = async () => {
+    if (transactionToEdit) {
+      await deleteTransaction(transactionToEdit.id);
+      onOpenChange(false);
+    }
   };
 
   const formatAmountInput = (value: string) => {
@@ -214,15 +223,49 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
             />
           </div>
 
-          {/* Submit Button */}
-          <Button
-            onClick={handleSubmit}
-            disabled={!amount || !categoryId}
-            className="h-14 w-full text-base font-bold rounded-xl shadow-lg active:scale-95 transition-all"
-          >
-            {isEditing ? <Save className="mr-2 h-5 w-5" /> : <Check className="mr-2 h-5 w-5" />}
-            {isEditing ? 'Confirmar alteração' : `Salvar ${type === 'expense' ? 'despesa' : 'receita'}`}
-          </Button>
+          {/* Buttons */}
+          <div className="flex flex-col gap-3 pb-4">
+            <Button
+              onClick={handleSubmit}
+              disabled={!amount || !categoryId}
+              className="h-14 w-full text-base font-bold rounded-xl shadow-lg active:scale-95 transition-all"
+            >
+              {isEditing ? <Save className="mr-2 h-5 w-5" /> : <Check className="mr-2 h-5 w-5" />}
+              {isEditing ? 'Confirmar alteração' : `Salvar ${type === 'expense' ? 'despesa' : 'receita'}`}
+            </Button>
+
+            {isEditing && (
+              <>
+                {!showConfirmDelete ? (
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowConfirmDelete(true)}
+                    className="h-12 w-full text-destructive hover:text-destructive hover:bg-destructive/10 font-bold"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Excluir esta transação
+                  </Button>
+                ) : (
+                  <div className="flex gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <Button
+                      variant="destructive"
+                      onClick={handleDelete}
+                      className="h-12 flex-1 font-bold rounded-xl"
+                    >
+                      Sim, excluir
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowConfirmDelete(false)}
+                      className="h-12 flex-1 font-bold rounded-xl"
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </SheetContent>
     </Sheet>
