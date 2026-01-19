@@ -1,15 +1,17 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Transaction, FinancialGoal, Category } from '@/types/finance';
-import { mockTransactions, mockGoals } from '@/data/mockData';
 import { defaultCategories } from '@/data/categories';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface FinanceContextType {
   transactions: Transaction[];
   goals: FinancialGoal[];
   categories: Category[];
-  addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
-  deleteTransaction: (id: string) => void;
-  updateGoal: (id: string, amount: number) => void;
+  loading: boolean;
+  addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<void>;
+  deleteTransaction: (id: string) => Promise<void>;
+  updateGoal: (id: string, amount: number) => Promise<void>;
   getTotalIncome: () => number;
   getTotalExpenses: () => number;
   getBalance: () => number;
@@ -19,28 +21,126 @@ interface FinanceContextType {
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 
 export function FinanceProvider({ children }: { children: ReactNode }) {
-  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
-  const [goals, setGoals] = useState<FinancialGoal[]>(mockGoals);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [goals, setGoals] = useState<FinancialGoal[]>([]);
   const [categories] = useState<Category[]>(defaultCategories);
+  const [loading, setLoading] = useState(true);
 
-  const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
-    const newTransaction: Transaction = {
-      ...transaction,
-      id: Date.now().toString(),
-    };
-    setTransactions(prev => [newTransaction, ...prev]);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+
+      const { data: transData, error: transError } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('date', { ascending: false });
+
+      if (transError) throw transError;
+
+      const formattedTransactions: Transaction[] = (transData || []).map(t => ({
+        id: t.id,
+        type: t.type as 'income' | 'expense',
+        amount: Number(t.amount),
+        date: t.date,
+        description: t.description,
+        paymentMethod: t.payment_method as any,
+        category: defaultCategories.find(c => c.id === t.category_id) || defaultCategories[0],
+      }));
+
+      const { data: goalsData, error: goalsError } = await supabase
+        .from('goals')
+        .select('*');
+
+      if (goalsError) throw goalsError;
+
+      const formattedGoals: FinancialGoal[] = (goalsData || []).map(g => ({
+        id: g.id,
+        name: g.name,
+        targetAmount: Number(g.target_amount),
+        currentAmount: Number(g.current_amount),
+        deadline: g.deadline,
+        icon: g.icon,
+        color: g.color,
+      }));
+
+      setTransactions(formattedTransactions);
+      setGoals(formattedGoals);
+    } catch (error: any) {
+      console.error('Erro ao buscar dados:', error.message);
+      toast.error('Erro ao carregar seus dados.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const deleteTransaction = (id: string) => {
-    setTransactions(prev => prev.filter(t => t.id !== id));
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert([{
+          type: transaction.type,
+          amount: transaction.amount,
+          category_id: transaction.category.id,
+          date: transaction.date,
+          description: transaction.description,
+          payment_method: transaction.paymentMethod,
+        }])
+        .select();
+
+      if (error) throw error;
+
+      if (data) {
+        const newTransaction: Transaction = {
+          ...transaction,
+          id: data[0].id,
+        };
+        setTransactions(prev => [newTransaction, ...prev]);
+        toast.success('Transação adicionada!');
+      }
+    } catch (error: any) {
+      toast.error('Erro ao salvar transação: ' + error.message);
+    }
   };
 
-  const updateGoal = (id: string, amount: number) => {
-    setGoals(prev =>
-      prev.map(g =>
-        g.id === id ? { ...g, currentAmount: Math.min(g.currentAmount + amount, g.targetAmount) } : g
-      )
-    );
+  const deleteTransaction = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      setTransactions(prev => prev.filter(t => t.id !== id));
+      toast.success('Transação excluída.');
+    } catch (error: any) {
+      toast.error('Erro ao excluir: ' + error.message);
+    }
+  };
+
+  const updateGoal = async (id: string, amount: number) => {
+    try {
+      const goal = goals.find(g => g.id === id);
+      if (!goal) return;
+
+      const newAmount = Math.min(goal.currentAmount + amount, goal.targetAmount);
+
+      const { error } = await supabase
+        .from('goals')
+        .update({ current_amount: newAmount })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setGoals(prev =>
+        prev.map(g => (g.id === id ? { ...g, currentAmount: newAmount } : g))
+      );
+    } catch (error: any) {
+      toast.error('Erro ao atualizar meta: ' + error.message);
+    }
   };
 
   const getTotalIncome = () => {
@@ -84,6 +184,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         transactions,
         goals,
         categories,
+        loading,
         addTransaction,
         deleteTransaction,
         updateGoal,
