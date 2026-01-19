@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Loader2, ArrowRight, User as UserIcon } from 'lucide-react';
 
 export default function Auth() {
     const [loading, setLoading] = useState(false);
@@ -15,6 +15,7 @@ export default function Auth() {
     const [isForgotPassword, setIsForgotPassword] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [name, setName] = useState('');
     const navigate = useNavigate();
     const { session } = useAuth();
 
@@ -41,6 +42,11 @@ export default function Auth() {
                 const { error, data } = await supabase.auth.signUp({
                     email,
                     password,
+                    options: {
+                        data: {
+                            full_name: name,
+                        }
+                    }
                 });
                 if (error) throw error;
 
@@ -97,6 +103,23 @@ export default function Auth() {
                     <form onSubmit={handleAuth}>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
+                                {isSignUp && (
+                                    <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+                                        <Label htmlFor="name">Nome Completo</Label>
+                                        <div className="relative">
+                                            <UserIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                            <Input
+                                                id="name"
+                                                type="text"
+                                                placeholder="Seu Nome"
+                                                className="pl-10"
+                                                value={name}
+                                                onChange={(e) => setName(e.target.value)}
+                                                required={isSignUp}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                                 <Label htmlFor="email">E-mail</Label>
                                 <div className="relative">
                                     <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
