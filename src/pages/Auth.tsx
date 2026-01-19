@@ -170,7 +170,7 @@ export default function Auth() {
                             </Button>
                         </CardFooter>
                     </form>
-    // Removed offline mode option
+
                 </Card>
             </div>
         </div>
