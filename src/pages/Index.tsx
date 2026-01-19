@@ -16,7 +16,7 @@ import { AddTransactionSheet } from '@/components/transaction/AddTransactionShee
 import { AddGoalSheet } from '@/components/goals/AddGoalSheet';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { useFinance } from '@/contexts/FinanceContext';
-import { Crosshair, Plus, Zap } from 'lucide-react';
+import { Crosshair, Plus, Zap, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Transaction } from '@/types/finance';
 import { FinancialCalendar } from '@/components/dashboard/FinancialCalendar';
@@ -38,9 +38,15 @@ function HomeView() {
 function ExtractView({ onEditTransaction }: { onEditTransaction: (t: Transaction) => void }) {
   return (
     <div className="space-y-6 px-4 pb-24 pt-4 md:px-8">
-      <div className="flex flex-col gap-2">
-        <h2 className="text-2xl font-bold tracking-tight">Extrato</h2>
-        <p className="text-muted-foreground">Visualize suas transações e calendário.</p>
+      <div className="flex flex-row items-center justify-between">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-2xl font-bold tracking-tight">Extrato</h2>
+          <p className="text-muted-foreground">Visualize suas transações e calendário.</p>
+        </div>
+        <Button variant="outline" className="gap-2" onClick={useFinance().exportToPDF}>
+          <FileText className="h-4 w-4" />
+          Gerar Relatório
+        </Button>
       </div>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
         <div className="md:col-span-12">
