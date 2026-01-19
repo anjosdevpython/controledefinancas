@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import TutorialsView from './TutorialsView';
 import { CategoryManager } from '@/components/settings/CategoryManager';
 import { FinanceProvider } from '@/contexts/FinanceContext';
 import { Header } from '@/components/layout/Header';
@@ -190,6 +191,7 @@ function AppContent() {
           {activeTab === 'stats' && <StatsView />}
           {activeTab === 'goals' && <GoalsView onAddNew={() => setIsGoalOpen(true)} />}
           {activeTab === 'settings' && <SettingsView />}
+          {activeTab === 'tutorials' && <TutorialsView />}
         </main>
 
         <div className="md:hidden">

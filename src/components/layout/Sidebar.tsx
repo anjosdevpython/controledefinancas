@@ -1,4 +1,4 @@
-import { Home, PieChart, Crosshair, Settings, Plus, ListOrdered, Sparkles } from 'lucide-react';
+import { Home, PieChart, PlusCircle, Settings, Target, TrendingUp, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
 
@@ -16,6 +16,7 @@ export function Sidebar({ activeTab, onTabChange, onAddClick }: SidebarProps) {
         { id: 'goals', icon: 'Crosshair', label: 'Metas', color: '#F59E0B' },
         { id: 'tips', icon: 'Sparkles', label: 'Dicas', color: '#EC4899' },
         { id: 'settings', icon: 'Settings', label: 'Ajustes', color: '#6B7280' },
+        { id: 'tutorials', icon: 'BookOpen', label: 'Ajuda', color: '#6B7280' },
     ];
 
     return (
@@ -48,7 +49,7 @@ export function Sidebar({ activeTab, onTabChange, onAddClick }: SidebarProps) {
                     onClick={onAddClick}
                     className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-4 font-bold text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
-                    <Plus className="h-6 w-6" />
+                    <PlusCircle className="h-6 w-6" />
                     <span>Nova Transação</span>
                 </button>
             </div>

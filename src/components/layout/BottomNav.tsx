@@ -1,4 +1,4 @@
-import { Home, PieChart, Crosshair, Plus, Settings, ListOrdered, Sparkles } from 'lucide-react';
+import { Home, PieChart, PlusCircle, Target, User, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
 
@@ -10,10 +10,12 @@ interface BottomNavProps {
 
 const navItems = [
   { id: 'home', label: 'Início', icon: 'Home', color: '#8B5CF6' },
-  { id: 'extract', label: 'Extrato', icon: 'ListOrdered', color: '#3B82F6' },
+  { id: 'goals', label: 'Metas', icon: 'Target', color: '#FFD700' }, // Assuming a color for 'goals'
+  { id: 'tutorials', label: 'Ajuda', icon: 'BookOpen', color: '#00BFFF' }, // Assuming a color for 'tutorials'
   { id: 'add', label: 'Adicionar', icon: 'Plus', isAction: true, color: '#FFFFFF' },
   { id: 'tips', label: 'Dicas', icon: 'Sparkles', color: '#EC4899' },
   { id: 'stats', label: 'Estatísticas', icon: 'PieChart', color: '#10B981' },
+  { id: 'settings', label: 'Perfil', icon: 'User', color: '#A9A9A9' }, // Assuming a color for 'settings'
 ];
 
 export function BottomNav({ activeTab, onTabChange, onAddClick }: BottomNavProps) {
