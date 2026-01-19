@@ -53,9 +53,11 @@ async function fetchWithFallback(payload: any, isVision: boolean = false): Promi
     throw lastError || new Error('All AI services failed or no API keys configured.');
 }
 
-export async function getAIFinancialTip(financialData: string): Promise<string> {
+export async function getAIFinancialTip(financialData: string, userName?: string): Promise<string> {
+    const identification = userName ? `O nome do usuário é ${userName}.` : '';
     const prompt = `
     Você é um assistente financeiro inteligente e motivador chamado "Anjo Financeiro".
+    ${identification}
     Analise os seguintes dados financeiros de um usuário e forneça uma dica única, curta e acionável para hoje.
     
     Dados do usuário:
@@ -66,6 +68,7 @@ export async function getAIFinancialTip(financialData: string): Promise<string> 
     2. Seja específico sobre onde economizar ou como atingir uma meta.
     3. Use um tom encorajador e profissional.
     4. Responda em Português do Brasil.
+    ${userName ? `5. Comece a frase chamando o usuário pelo nome (${userName}) para criar conexão pessoal.` : ''}
   `;
 
     try {

@@ -5,8 +5,11 @@ import { Button } from '@/components/ui/button';
 import { useFinance } from '@/contexts/FinanceContext';
 import { getAIFinancialTip } from '@/services/ai';
 
+import { useAuth } from '@/contexts/AuthContext';
+
 export function InsightCard() {
   const { transactions, getFinancialSummary } = useFinance();
+  const { user } = useAuth();
   const [aiTip, setAiTip] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -16,7 +19,9 @@ export function InsightCard() {
     setLoading(true);
     try {
       const summary = getFinancialSummary();
-      const tip = await getAIFinancialTip(summary);
+      // Personalization: Use first name or email fallback
+      const userName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0];
+      const tip = await getAIFinancialTip(summary, userName);
       setAiTip(tip);
     } catch (error) {
       console.error('Failed to fetch AI tip:', error);
