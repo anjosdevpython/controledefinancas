@@ -8,7 +8,8 @@ export async function getGeminiFinancialTip(financialData: string): Promise<stri
         return 'Chave de API do Gemini não configurada. Adicione VITE_GEMINI_API_KEY às variáveis de ambiente do seu projeto (Vercel/Netlify).';
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+    // Use v1 instead of v1beta as it might be more stable for this model/key
+    const url = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
 
     const prompt = `
     Você é um assistente financeiro inteligente e motivador chamado "Anjo Financeiro".
