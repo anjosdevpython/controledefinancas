@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Check, Save, Trash2 } from 'lucide-react';
+import { X, Check, Save, Trash2, AlertCircle } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -16,6 +16,15 @@ import { CategoryIcon } from '@/components/shared/CategoryIcon';
 import { paymentMethods } from '@/data/categories';
 import { cn } from '@/lib/utils';
 import * as LucideIcons from 'lucide-react';
+import { z } from 'zod';
+
+const transactionSchema = z.object({
+  amount: z.number().positive('O valor deve ser maior que zero'),
+  categoryId: z.string().min(1, 'Selecione uma categoria'),
+  date: z.string().min(1, 'A data é obrigatória'),
+  description: z.string().max(100, 'A descrição deve ter no máximo 100 caracteres').optional(),
+  paymentMethod: z.string(),
+});
 
 interface AddTransactionSheetProps {
   open: boolean;
@@ -32,12 +41,14 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
   const [description, setDescription] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const isEditing = !!transactionToEdit;
 
   useEffect(() => {
     if (open) {
       setShowConfirmDelete(false);
+      setErrors({});
       if (transactionToEdit) {
         setType(transactionToEdit.type);
         setAmount(transactionToEdit.amount.toString().replace('.', ','));
@@ -60,11 +71,32 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
   const selectedCategory = categories.find(c => c.id === categoryId);
 
   const handleSubmit = async () => {
-    if (!amount || !categoryId) return;
+    setErrors({});
+
+    const numericAmount = parseFloat(amount.replace(',', '.'));
+
+    const result = transactionSchema.safeParse({
+      amount: numericAmount,
+      categoryId,
+      date,
+      description,
+      paymentMethod,
+    });
+
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0].toString()] = err.message;
+        }
+      });
+      setErrors(fieldErrors);
+      return;
+    }
 
     const transactionData = {
       type,
-      amount: parseFloat(amount.replace(',', '.')),
+      amount: numericAmount,
       category: selectedCategory!,
       date,
       description: description || undefined,
@@ -90,6 +122,9 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
   const formatAmountInput = (value: string) => {
     const numericValue = value.replace(/[^\d,]/g, '');
     setAmount(numericValue);
+    if (errors.amount) {
+      setErrors(prev => ({ ...prev, amount: '' }));
+    }
   };
 
   return (
@@ -106,7 +141,7 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
           {!isEditing && (
             <div className="flex gap-2 rounded-lg bg-secondary p-1">
               <button
-                onClick={() => { setType('expense'); setCategoryId(''); }}
+                onClick={() => { setType('expense'); setCategoryId(''); setErrors({}); }}
                 className={cn(
                   'flex-1 rounded-md py-2.5 text-sm font-medium transition-all',
                   type === 'expense'
@@ -117,7 +152,7 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
                 Despesa
               </button>
               <button
-                onClick={() => { setType('income'); setCategoryId(''); }}
+                onClick={() => { setType('income'); setCategoryId(''); setErrors({}); }}
                 className={cn(
                   'flex-1 rounded-md py-2.5 text-sm font-medium transition-all',
                   type === 'income'
@@ -132,7 +167,14 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
 
           {/* Amount */}
           <div className="space-y-2">
-            <Label htmlFor="amount" className="text-sm font-semibold opacity-70">Valor</Label>
+            <div className="flex justify-between">
+              <Label htmlFor="amount" className="text-sm font-semibold opacity-70">Valor</Label>
+              {errors.amount && (
+                <span className="text-[10px] font-bold text-destructive flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" /> {errors.amount}
+                </span>
+              )}
+            </div>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-medium text-muted-foreground">
                 R$
@@ -144,19 +186,32 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
                 placeholder="0,00"
                 value={amount}
                 onChange={(e) => formatAmountInput(e.target.value)}
-                className="h-14 pl-12 text-2xl font-bold rounded-xl focus:ring-primary/20"
+                className={cn(
+                  "h-14 pl-12 text-2xl font-bold rounded-xl focus:ring-primary/20",
+                  errors.amount && "border-destructive/50 bg-destructive/5"
+                )}
               />
             </div>
           </div>
 
           {/* Category */}
           <div className="space-y-2">
-            <Label className="text-sm font-semibold opacity-70">Categoria</Label>
-            <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto pr-2">
+            <div className="flex justify-between">
+              <Label className="text-sm font-semibold opacity-70">Categoria</Label>
+              {errors.categoryId && (
+                <span className="text-[10px] font-bold text-destructive flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" /> {errors.categoryId}
+                </span>
+              )}
+            </div>
+            <div className={cn(
+              "grid grid-cols-4 gap-2 max-h-48 overflow-y-auto pr-2 p-1 rounded-xl transition-colors",
+              errors.categoryId && "bg-destructive/5 ring-1 ring-destructive/20"
+            )}>
               {filteredCategories.map((cat) => (
                 <button
                   key={cat.id}
-                  onClick={() => setCategoryId(cat.id)}
+                  onClick={() => { setCategoryId(cat.id); setErrors(prev => ({ ...prev, categoryId: '' })); }}
                   className={cn(
                     'flex flex-col items-center gap-1.5 rounded-xl p-3 transition-all',
                     categoryId === cat.id
@@ -212,13 +267,23 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-semibold opacity-70">Descrição (opcional)</Label>
+            <div className="flex justify-between">
+              <Label htmlFor="description" className="text-sm font-semibold opacity-70">Descrição (opcional)</Label>
+              {errors.description && (
+                <span className="text-[10px] font-bold text-destructive">
+                  {errors.description}
+                </span>
+              )}
+            </div>
             <Textarea
               id="description"
               placeholder="Ex: Supermercado, conta de luz..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="resize-none rounded-xl"
+              className={cn(
+                "resize-none rounded-xl",
+                errors.description && "border-destructive/50 bg-destructive/5"
+              )}
               rows={2}
             />
           </div>
@@ -227,7 +292,6 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
           <div className="flex flex-col gap-3 pb-4">
             <Button
               onClick={handleSubmit}
-              disabled={!amount || !categoryId}
               className="h-14 w-full text-base font-bold rounded-xl shadow-lg active:scale-95 transition-all"
             >
               {isEditing ? <Save className="mr-2 h-5 w-5" /> : <Check className="mr-2 h-5 w-5" />}
