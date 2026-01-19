@@ -62,18 +62,20 @@ export default function Auth() {
                 <div className="flex flex-col items-center text-center">
                     <img src="/logo.png" alt="Anjos Finanças Logo" className="h-16 w-16 rounded-2xl shadow-xl transition-transform hover:scale-110" />
                     <h2 className="mt-6 text-3xl font-bold tracking-tight text-foreground">
-                        {isSignUp ? 'Criar sua conta' : 'Acesse o Anjos Finanças'}
+                        {getTitle()}
                     </h2>
                     <p className="mt-2 text-sm text-muted-foreground">
-                        O seu controle financeiro com asas para crescer.
+                        {isForgotPassword ? 'Enviaremos um link para seu e-mail' : 'O seu controle financeiro com asas para crescer.'}
                     </p>
                 </div>
 
                 <Card className="border-border/50 bg-card/50 shadow-2xl backdrop-blur-sm">
                     <CardHeader>
-                        <CardTitle>{isSignUp ? 'Cadastro' : 'Login'}</CardTitle>
+                        <CardTitle>{isForgotPassword ? 'Recuperação' : (isSignUp ? 'Cadastro' : 'Login')}</CardTitle>
                         <CardDescription>
-                            {isSignUp ? 'Preencha os dados para começar' : 'Insira suas credenciais para continuar'}
+                            {isForgotPassword
+                                ? 'Insira o e-mail da sua conta'
+                                : (isSignUp ? 'Preencha os dados para começar' : 'Insira suas credenciais para continuar')}
                         </CardDescription>
                     </CardHeader>
                     <form onSubmit={handleAuth}>
@@ -93,21 +95,35 @@ export default function Auth() {
                                     />
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="password">Senha</Label>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        id="password"
-                                        type="password"
-                                        placeholder="••••••••"
-                                        className="pl-10"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        required
-                                    />
+                            {!isForgotPassword && (
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <Label htmlFor="password">Senha</Label>
+                                        {!isSignUp && (
+                                            <Button
+                                                type="button"
+                                                variant="link"
+                                                className="h-auto p-0 text-xs text-primary"
+                                                onClick={() => setIsForgotPassword(true)}
+                                            >
+                                                Esqueceu a senha?
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <div className="relative">
+                                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            id="password"
+                                            type="password"
+                                            placeholder="••••••••"
+                                            className="pl-10"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            required
+                                        />
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </CardContent>
                         <CardFooter className="flex flex-col space-y-4">
                             <Button className="w-full group" disabled={loading}>
@@ -115,7 +131,7 @@ export default function Auth() {
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 ) : (
                                     <>
-                                        {isSignUp ? 'Cadastrar' : 'Entrar'}
+                                        {isForgotPassword ? 'Enviar Link' : (isSignUp ? 'Cadastrar' : 'Entrar')}
                                         <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                                     </>
                                 )}
@@ -124,9 +140,17 @@ export default function Auth() {
                                 type="button"
                                 variant="link"
                                 className="w-full text-sm"
-                                onClick={() => setIsSignUp(!isSignUp)}
+                                onClick={() => {
+                                    if (isForgotPassword) {
+                                        setIsForgotPassword(false);
+                                    } else {
+                                        setIsSignUp(!isSignUp);
+                                    }
+                                }}
                             >
-                                {isSignUp ? 'Já tem uma conta? Entre aqui' : 'Não tem conta? Cadastre-se'}
+                                {isForgotPassword
+                                    ? 'Voltar para o Login'
+                                    : (isSignUp ? 'Já tem uma conta? Entre aqui' : 'Não tem conta? Cadastre-se')}
                             </Button>
                         </CardFooter>
                     </form>
