@@ -13,6 +13,7 @@ interface FinanceContextType {
   addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   addGoal: (goal: Omit<FinancialGoal, 'id'>) => Promise<void>;
+  deleteGoal: (id: string) => Promise<void>;
   updateGoal: (id: string, amount: number) => Promise<void>;
   getTotalIncome: () => number;
   getTotalExpenses: () => number;
@@ -163,6 +164,21 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const deleteGoal = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('goals')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      setGoals(prev => prev.filter(g => g.id !== id));
+      toast.success('Meta excluída.');
+    } catch (error: any) {
+      toast.error('Erro ao excluir meta: ' + error.message);
+    }
+  };
+
   const updateGoal = async (id: string, amount: number) => {
     try {
       const goal = goals.find(g => g.id === id);
@@ -230,6 +246,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         addTransaction,
         deleteTransaction,
         addGoal,
+        deleteGoal,
         updateGoal,
         getTotalIncome,
         getTotalExpenses,

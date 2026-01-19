@@ -7,14 +7,14 @@ import { formatCurrency } from '@/lib/formatters';
 import { FinancialGoal } from '@/types/finance';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
 import { useFinance } from '@/contexts/FinanceContext';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Trash2 } from 'lucide-react';
 
 interface GoalCardProps {
   goal: FinancialGoal;
 }
 
 export function GoalCard({ goal }: GoalCardProps) {
-  const { updateGoal } = useFinance();
+  const { updateGoal, deleteGoal } = useFinance();
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -32,8 +32,14 @@ export function GoalCard({ goal }: GoalCardProps) {
     }
   };
 
+  const handleDelete = async () => {
+    if (confirm('Deseja excluir esta meta?')) {
+      await deleteGoal(goal.id);
+    }
+  };
+
   return (
-    <Card className="overflow-hidden shadow-md border-border/50 bg-card/50 backdrop-blur-sm transition-all hover:shadow-lg">
+    <Card className="overflow-hidden shadow-md border-border/50 bg-card/50 backdrop-blur-sm transition-all hover:shadow-lg group">
       <CardContent className="p-5">
         <div className="mb-4 flex items-center gap-4">
           <CategoryIcon icon={goal.icon} color={goal.color} size="lg" />
@@ -43,10 +49,17 @@ export function GoalCard({ goal }: GoalCardProps) {
               {goal.deadline ? `Prazo: ${new Date(goal.deadline).toLocaleDateString()}` : 'Sem prazo'}
             </p>
           </div>
-          <div className="text-right">
+          <div className="flex flex-col items-end gap-1">
             <p className="text-xl font-black" style={{ color: goal.color }}>
               {Math.round(progress)}%
             </p>
+            <button
+              onClick={handleDelete}
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:bg-destructive/10 p-1 rounded"
+              title="Excluir meta"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
