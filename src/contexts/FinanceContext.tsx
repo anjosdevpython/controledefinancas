@@ -12,6 +12,7 @@ interface FinanceContextType {
   loading: boolean;
   addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
+  addGoal: (goal: Omit<FinancialGoal, 'id'>) => Promise<void>;
   updateGoal: (id: string, amount: number) => Promise<void>;
   getTotalIncome: () => number;
   getTotalExpenses: () => number;
@@ -132,6 +133,36 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const addGoal = async (goal: Omit<FinancialGoal, 'id'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('goals')
+        .insert([{
+          name: goal.name,
+          target_amount: goal.targetAmount,
+          current_amount: goal.currentAmount,
+          deadline: goal.deadline,
+          icon: goal.icon,
+          color: goal.color,
+          user_id: user?.id
+        }])
+        .select();
+
+      if (error) throw error;
+
+      if (data) {
+        const newGoal: FinancialGoal = {
+          ...goal,
+          id: data[0].id,
+        };
+        setGoals(prev => [newGoal, ...prev]);
+        toast.success('Meta criada com sucesso!');
+      }
+    } catch (error: any) {
+      toast.error('Erro ao salvar meta: ' + error.message);
+    }
+  };
+
   const updateGoal = async (id: string, amount: number) => {
     try {
       const goal = goals.find(g => g.id === id);
@@ -198,6 +229,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         loading,
         addTransaction,
         deleteTransaction,
+        addGoal,
         updateGoal,
         getTotalIncome,
         getTotalExpenses,
