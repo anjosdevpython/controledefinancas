@@ -12,7 +12,7 @@ const navItems = [
   { id: 'home', label: 'Início', icon: 'Home', color: '#8B5CF6' },
   { id: 'goals', label: 'Metas', icon: 'Target', color: '#FFD700' }, // Assuming a color for 'goals'
   { id: 'tutorials', label: 'Ajuda', icon: 'BookOpen', color: '#00BFFF' }, // Assuming a color for 'tutorials'
-  { id: 'add', label: 'Adicionar', icon: 'Plus', isAction: true, color: '#FFFFFF' },
+  { id: 'add', label: 'Adicionar', icon: 'PlusCircle', isAction: true, color: '#FFFFFF' },
   { id: 'tips', label: 'Dicas', icon: 'Sparkles', color: '#EC4899' },
   { id: 'stats', label: 'Estatísticas', icon: 'PieChart', color: '#10B981' },
   { id: 'settings', label: 'Perfil', icon: 'User', color: '#A9A9A9' }, // Assuming a color for 'settings'
