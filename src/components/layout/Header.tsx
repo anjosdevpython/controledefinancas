@@ -10,9 +10,12 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-md">
       <div className="flex h-16 items-center justify-between px-4">
-        <div>
-          <p className="text-sm text-muted-foreground">{greeting} 👋</p>
-          <h1 className="text-lg font-bold tracking-tight">FinançasPro</h1>
+        <div className="flex items-center gap-3">
+          <img src="/logo.png" alt="Anjos Finanças Logo" className="h-10 w-10 rounded-lg object-contain" />
+          <div>
+            <p className="text-sm text-muted-foreground">{greeting} 👋</p>
+            <h1 className="text-lg font-bold tracking-tight">Anjos Finanças</h1>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
