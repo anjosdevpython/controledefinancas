@@ -583,34 +583,58 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     return `Saldo: ${formattedBalance}. Receitas: ${formattedIncome}. Despesas: ${formattedExpenses}. Principais Categorias: ${topCategories}. Metas: ${goalsSummary}.`;
   };
 
+  const value = useMemo(() => ({
+    transactions,
+    goals,
+    categories,
+    accounts,
+    loading,
+    addTransaction: (t: any, goalId: any) => addTransactionMutation.mutateAsync({ transaction: t, goalId }).then(() => { }),
+    updateTransaction: (id: any, fields: any) => updateTransactionMutation.mutateAsync({ id, fields }).then(() => { }),
+    deleteTransaction: (id: any) => deleteTransactionMutation.mutateAsync(id).then(() => { }),
+    addGoal: (g: any) => addGoalMutation.mutateAsync(g).then(() => { }),
+    deleteGoal: (id: any) => deleteGoalMutation.mutateAsync(id).then(() => { }),
+    updateGoal: (id: any, amount: any, subGoalId: any) => updateGoalMutation.mutateAsync({ id, amount, subGoalId }).then(() => { }),
+    addCategory: (c: any) => addCategoryMutation.mutateAsync(c).then(() => { }),
+    updateCategory: (id: any, c: any) => updateCategoryMutation.mutateAsync({ id, category: c }).then(() => { }),
+    deleteCategory: (id: any) => deleteCategoryMutation.mutateAsync(id).then(() => { }),
+    getTotalIncome,
+    getTotalExpenses,
+    getBalance,
+    getExpensesByCategory,
+    getFinancialSummary,
+    exportToPDF,
+    getGoalPrediction,
+  }), [
+    transactions,
+    goals,
+    categories,
+    accounts,
+    loading,
+    addTransactionMutation,
+    updateTransactionMutation,
+    deleteTransactionMutation,
+    addGoalMutation,
+    deleteGoalMutation,
+    updateGoalMutation,
+    addCategoryMutation,
+    updateCategoryMutation,
+    deleteCategoryMutation
+  ]);
+
   return (
-    <FinanceContext.Provider
-      value={{
-        transactions,
-        goals,
-        categories,
-        accounts,
-        loading,
-        addTransaction: (t, goalId) => addTransactionMutation.mutateAsync({ transaction: t, goalId }).then(() => { }),
-        updateTransaction: (id, fields) => updateTransactionMutation.mutateAsync({ id, fields }).then(() => { }),
-        deleteTransaction: (id) => deleteTransactionMutation.mutateAsync(id).then(() => { }),
-        addGoal: (g) => addGoalMutation.mutateAsync(g).then(() => { }),
-        deleteGoal: (id) => deleteGoalMutation.mutateAsync(id).then(() => { }),
-        updateGoal: (id, amount, subGoalId) => updateGoalMutation.mutateAsync({ id, amount, subGoalId }).then(() => { }),
-        addCategory: (c) => addCategoryMutation.mutateAsync(c).then(() => { }),
-        updateCategory: (id, c) => updateCategoryMutation.mutateAsync({ id, category: c }).then(() => { }),
-        deleteCategory: (id) => deleteCategoryMutation.mutateAsync(id).then(() => { }),
-        getTotalIncome,
-        getTotalExpenses,
-        getBalance,
-        getExpensesByCategory,
-        getFinancialSummary,
-        exportToPDF,
-        getGoalPrediction,
-      }}
+    deleteTransactionMutation,
+    addGoalMutation,
+    deleteGoalMutation,
+    updateGoalMutation,
+    addCategoryMutation,
+    updateCategoryMutation,
+    deleteCategoryMutation
+        ]);
+}}
     >
-      {children}
-    </FinanceContext.Provider>
+  { children }
+    </FinanceContext.Provider >
   );
 }
 
