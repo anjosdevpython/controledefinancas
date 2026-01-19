@@ -623,18 +623,9 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   ]);
 
   return (
-    deleteTransactionMutation,
-    addGoalMutation,
-    deleteGoalMutation,
-    updateGoalMutation,
-    addCategoryMutation,
-    updateCategoryMutation,
-    deleteCategoryMutation
-        ]);
-}}
-    >
-  { children }
-    </FinanceContext.Provider >
+    <FinanceContext.Provider value={value}>
+      {children}
+    </FinanceContext.Provider>
   );
 }
 
