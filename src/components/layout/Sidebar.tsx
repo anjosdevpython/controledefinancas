@@ -1,5 +1,6 @@
-import { Home, PieChart, Target, Settings, Plus } from 'lucide-react';
+import { Home, PieChart, Crosshair, Settings, Plus, ListOrdered, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CategoryIcon } from '@/components/shared/CategoryIcon';
 
 interface SidebarProps {
     activeTab: string;
@@ -9,10 +10,12 @@ interface SidebarProps {
 
 export function Sidebar({ activeTab, onTabChange, onAddClick }: SidebarProps) {
     const menuItems = [
-        { id: 'home', icon: Home, label: 'Início' },
-        { id: 'stats', icon: PieChart, label: 'Estatísticas' },
-        { id: 'goals', icon: Target, label: 'Metas' },
-        { id: 'settings', icon: Settings, label: 'Ajustes' },
+        { id: 'home', icon: 'Home', label: 'Início', color: '#8B5CF6' },
+        { id: 'extract', icon: 'ListOrdered', label: 'Extrato', color: '#3B82F6' },
+        { id: 'stats', icon: 'PieChart', label: 'Estatísticas', color: '#10B981' },
+        { id: 'goals', icon: 'Crosshair', label: 'Metas', color: '#F59E0B' },
+        { id: 'tips', icon: 'Sparkles', label: 'Dicas', color: '#EC4899' },
+        { id: 'settings', icon: 'Settings', label: 'Ajustes', color: '#6B7280' },
     ];
 
     return (
@@ -34,7 +37,7 @@ export function Sidebar({ activeTab, onTabChange, onAddClick }: SidebarProps) {
                                 : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
                         )}
                     >
-                        <item.icon className="h-5 w-5" />
+                        <CategoryIcon icon={item.icon} color={activeTab === item.id ? '#FFFFFF' : item.color} size="sm" className="bg-transparent" />
                         <span className="font-medium">{item.label}</span>
                     </button>
                 ))}
@@ -52,12 +55,13 @@ export function Sidebar({ activeTab, onTabChange, onAddClick }: SidebarProps) {
 
             <div className="px-6 py-6 transition-opacity hover:opacity-100 opacity-60">
                 <a
-                    href="https://allananjos.dev.br/"
+                    href="https://wa.me/5541984196060"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                    className="flex flex-col gap-1 rounded-lg border border-border/50 bg-secondary/30 p-3 text-center transition-all hover:bg-secondary/50 hover:shadow-sm"
                 >
-                    © 2026 Allan Anjos
+                    <span className="text-xs font-medium text-primary">Precisa de ajuda?</span>
+                    <span className="text-[10px] text-muted-foreground">Falar no WhatsApp</span>
                 </a>
             </div>
         </aside>

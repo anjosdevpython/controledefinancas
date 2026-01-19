@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { X, Check, Save, Trash2, AlertCircle } from 'lucide-react';
+import { CategoryManager } from '@/components/settings/CategoryManager';
+import { useState, useEffect, useRef } from 'react';
+import { X, Check, Save, Trash2, AlertCircle, Camera, Loader2, RefreshCw, Crosshair } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -17,10 +18,13 @@ import { paymentMethods } from '@/data/categories';
 import { cn } from '@/lib/utils';
 import * as LucideIcons from 'lucide-react';
 import { z } from 'zod';
+import { scanReceipt } from '@/services/ai';
+import { toast } from 'sonner';
 
 const transactionSchema = z.object({
   amount: z.number().positive('O valor deve ser maior que zero'),
   categoryId: z.string().min(1, 'Selecione uma categoria'),
+  accountId: z.string().min(1, 'Selecione uma conta'),
   date: z.string().min(1, 'A data é obrigatória'),
   description: z.string().max(100, 'A descrição deve ter no máximo 100 caracteres').optional(),
   paymentMethod: z.string(),
@@ -33,15 +37,20 @@ interface AddTransactionSheetProps {
 }
 
 export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: AddTransactionSheetProps) {
-  const { categories, addTransaction, updateTransaction, deleteTransaction } = useFinance();
+  const { categories, accounts, goals, addTransaction, updateTransaction, deleteTransaction } = useFinance();
   const [type, setType] = useState<TransactionType>('expense');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [accountId, setAccountId] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [description, setDescription] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isScanning, setIsScanning] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [goalId, setGoalId] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEditing = !!transactionToEdit;
 
@@ -53,22 +62,66 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
         setType(transactionToEdit.type);
         setAmount(transactionToEdit.amount.toString().replace('.', ','));
         setCategoryId(transactionToEdit.category.id);
+        setAccountId(transactionToEdit.accountId);
         setDate(transactionToEdit.date);
         setDescription(transactionToEdit.description || '');
         setPaymentMethod(transactionToEdit.paymentMethod || 'pix');
+        setIsRecurring(Boolean((transactionToEdit as any).is_recurring));
+        setGoalId((transactionToEdit as any).goal_id || '');
       } else {
         setType('expense');
         setAmount('');
         setCategoryId('');
+        setAccountId(accounts[0]?.id || 'default');
         setDate(new Date().toISOString().split('T')[0]);
         setDescription('');
         setPaymentMethod('pix');
+        setIsRecurring(false);
+        setGoalId('');
       }
     }
-  }, [open, transactionToEdit]);
+  }, [open, transactionToEdit, accounts]);
 
   const filteredCategories = categories.filter(c => c.type === type);
   const selectedCategory = categories.find(c => c.id === categoryId);
+
+  const handleScanReceipt = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsScanning(true);
+    toast.info('Escaneando comprovante... Isso pode levar alguns segundos.');
+
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64 = (reader.result as string).split(',')[1];
+        const data = await scanReceipt(base64);
+
+        if (data) {
+          setAmount(data.amount.toString().replace('.', ','));
+          setDescription(data.description);
+          setDate(data.date);
+
+          const category = categories.find(c =>
+            c.name.toLowerCase().includes(data.categoryName.toLowerCase()) ||
+            data.categoryName.toLowerCase().includes(c.name.toLowerCase())
+          );
+          if (category) setCategoryId(category.id);
+
+          toast.success('Comprovante escaneado com sucesso!');
+        } else {
+          toast.error('Não foi possível ler o comprovante. Tente novamente.');
+        }
+        setIsScanning(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao processar imagem.');
+      setIsScanning(false);
+    }
+  };
 
   const handleSubmit = async () => {
     setErrors({});
@@ -78,6 +131,7 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
     const result = transactionSchema.safeParse({
       amount: numericAmount,
       categoryId,
+      accountId,
       date,
       description,
       paymentMethod,
@@ -98,15 +152,17 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
       type,
       amount: numericAmount,
       category: selectedCategory!,
+      accountId,
       date,
       description: description || undefined,
       paymentMethod,
+      is_recurring: isRecurring // This will be sent as part of the Partial<Transaction> or any
     };
 
     if (isEditing && transactionToEdit) {
-      await updateTransaction(transactionToEdit.id, transactionData);
+      await updateTransaction(transactionToEdit.id, transactionData as any);
     } else {
-      await addTransaction(transactionData);
+      await addTransaction(transactionData as any, goalId || undefined);
     }
 
     onOpenChange(false);
@@ -137,33 +193,54 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
         </SheetHeader>
 
         <div className="space-y-6">
-          {/* Type Toggle */}
-          {!isEditing && (
-            <div className="flex gap-2 rounded-lg bg-secondary p-1">
-              <button
-                onClick={() => { setType('expense'); setCategoryId(''); setErrors({}); }}
-                className={cn(
-                  'flex-1 rounded-md py-2.5 text-sm font-medium transition-all',
-                  type === 'expense'
-                    ? 'bg-expense text-expense-foreground shadow-sm'
-                    : 'text-muted-foreground'
-                )}
-              >
-                Despesa
-              </button>
-              <button
-                onClick={() => { setType('income'); setCategoryId(''); setErrors({}); }}
-                className={cn(
-                  'flex-1 rounded-md py-2.5 text-sm font-medium transition-all',
-                  type === 'income'
-                    ? 'bg-income text-income-foreground shadow-sm'
-                    : 'text-muted-foreground'
-                )}
-              >
-                Receita
-              </button>
-            </div>
-          )}
+          {/* Action Row: Type + OCR */}
+          <div className="flex gap-2">
+            {!isEditing && (
+              <div className="flex-1 flex gap-2 rounded-lg bg-secondary p-1">
+                <button
+                  onClick={() => { setType('expense'); setCategoryId(''); setErrors({}); }}
+                  className={cn(
+                    'flex-1 rounded-md py-2.5 text-sm font-medium transition-all',
+                    type === 'expense'
+                      ? 'bg-expense text-expense-foreground shadow-sm'
+                      : 'text-muted-foreground'
+                  )}
+                >
+                  Despesa
+                </button>
+                <button
+                  onClick={() => { setType('income'); setCategoryId(''); setErrors({}); }}
+                  className={cn(
+                    'flex-1 rounded-md py-2.5 text-sm font-medium transition-all',
+                    type === 'income'
+                      ? 'bg-income text-income-foreground shadow-sm'
+                      : 'text-muted-foreground'
+                  )}
+                >
+                  Receita
+                </button>
+              </div>
+            )}
+            {type === 'expense' && !isEditing && (
+              <>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleScanReceipt}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isScanning}
+                  className="h-12 w-12 rounded-xl border-dashed border-primary/30 text-primary"
+                >
+                  {isScanning ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
+                </Button>
+              </>
+            )}
+          </div>
 
           {/* Amount */}
           <div className="space-y-2">
@@ -191,6 +268,31 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
                   errors.amount && "border-destructive/50 bg-destructive/5"
                 )}
               />
+            </div>
+          </div>
+
+          {/* Account/Wallet Selection */}
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold opacity-70">Conta / Carteira</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {accounts.map((acc) => (
+                <button
+                  key={acc.id}
+                  onClick={() => setAccountId(acc.id)}
+                  className={cn(
+                    'flex items-center gap-2 rounded-xl p-3 transition-all border text-left',
+                    accountId === acc.id
+                      ? 'bg-primary/10 border-primary ring-1 ring-primary'
+                      : 'bg-card border-border hover:bg-secondary/40'
+                  )}
+                >
+                  <div className="w-2 h-8 rounded-full" style={{ backgroundColor: acc.color }} />
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold truncate">{acc.name}</span>
+                    <span className="text-[10px] text-muted-foreground uppercase">{acc.type}</span>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -228,16 +330,64 @@ export function AddTransactionSheet({ open, onOpenChange, transactionToEdit }: A
             </div>
           </div>
 
-          {/* Date */}
+          {/* Goal selection (Optional) */}
           <div className="space-y-2">
-            <Label htmlFor="date" className="text-sm font-semibold opacity-70">Data</Label>
-            <Input
-              id="date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="h-12 rounded-xl"
-            />
+            <Label className="text-sm font-semibold opacity-70 flex items-center gap-2">
+              <Crosshair className="h-4 w-4" />
+              Vincular à Meta (Opcional)
+            </Label>
+            <select
+              value={goalId}
+              onChange={(e) => setGoalId(e.target.value)}
+              className="w-full h-12 rounded-xl border border-border bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer"
+            >
+              <option value="">Nenhuma meta selecionada</option>
+              {goals.map((goal) => (
+                <option key={goal.id} value={goal.id}>
+                  {goal.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Date & Recurring */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="date" className="text-sm font-semibold opacity-70">Data</Label>
+              <Input
+                id="date"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="h-12 rounded-xl"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold opacity-70">Recorrente?</Label>
+              <button
+                onClick={() => setIsRecurring(!isRecurring)}
+                className={cn(
+                  "flex items-center justify-between w-full h-12 px-4 rounded-xl border transition-all",
+                  isRecurring ? "bg-primary/10 border-primary ring-1 ring-primary" : "bg-card border-border hover:bg-secondary/40"
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <RefreshCw className={cn("h-4 w-4", isRecurring ? "text-primary animate-spin-slow" : "text-muted-foreground")} />
+                  <span className={cn("text-xs font-bold", isRecurring ? "text-primary" : "text-muted-foreground")}>
+                    {isRecurring ? 'Mensal' : 'Não'}
+                  </span>
+                </div>
+                <div className={cn(
+                  "w-10 h-5 rounded-full relative transition-colors",
+                  isRecurring ? "bg-primary" : "bg-muted"
+                )}>
+                  <div className={cn(
+                    "absolute top-1 w-3 h-3 rounded-full bg-white transition-all",
+                    isRecurring ? "left-6" : "left-1"
+                  )} />
+                </div>
+              </button>
+            </div>
           </div>
 
           {/* Payment Method */}

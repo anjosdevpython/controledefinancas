@@ -2,6 +2,16 @@ export type TransactionType = 'income' | 'expense';
 
 export type PaymentMethod = 'cash' | 'credit' | 'debit' | 'pix';
 
+export type AccountType = 'checking' | 'savings' | 'investment' | 'cash';
+
+export interface Account {
+  id: string;
+  name: string;
+  type: AccountType;
+  color: string;
+  balance: number;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -15,9 +25,18 @@ export interface Transaction {
   type: TransactionType;
   amount: number;
   category: Category;
+  accountId: string;
   date: string;
   description?: string;
   paymentMethod: PaymentMethod;
+}
+
+export interface SubGoal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  isCompleted: boolean;
 }
 
 export interface FinancialGoal {
@@ -28,6 +47,7 @@ export interface FinancialGoal {
   deadline: string;
   icon: string;
   color: string;
+  subGoals?: SubGoal[];
 }
 
 export interface MonthlyStats {

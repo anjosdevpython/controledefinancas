@@ -1,5 +1,6 @@
-import { Home, PieChart, Target, Plus, Settings } from 'lucide-react';
+import { Home, PieChart, Crosshair, Plus, Settings, ListOrdered, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CategoryIcon } from '@/components/shared/CategoryIcon';
 
 interface BottomNavProps {
   activeTab: string;
@@ -8,11 +9,11 @@ interface BottomNavProps {
 }
 
 const navItems = [
-  { id: 'home', label: 'Início', icon: Home },
-  { id: 'stats', label: 'Estatísticas', icon: PieChart },
-  { id: 'add', label: 'Adicionar', icon: Plus, isAction: true },
-  { id: 'goals', label: 'Metas', icon: Target },
-  { id: 'settings', label: 'Ajustes', icon: Settings },
+  { id: 'home', label: 'Início', icon: 'Home', color: '#8B5CF6' },
+  { id: 'extract', label: 'Extrato', icon: 'ListOrdered', color: '#3B82F6' },
+  { id: 'add', label: 'Adicionar', icon: 'Plus', isAction: true, color: '#FFFFFF' },
+  { id: 'tips', label: 'Dicas', icon: 'Sparkles', color: '#EC4899' },
+  { id: 'stats', label: 'Estatísticas', icon: 'PieChart', color: '#10B981' },
 ];
 
 export function BottomNav({ activeTab, onTabChange, onAddClick }: BottomNavProps) {
@@ -30,7 +31,7 @@ export function BottomNav({ activeTab, onTabChange, onAddClick }: BottomNavProps
                 onClick={onAddClick}
                 className="flex h-14 w-14 -translate-y-4 items-center justify-center rounded-full bg-primary shadow-lg transition-transform hover:scale-105 active:scale-95"
               >
-                <Icon className="h-6 w-6 text-primary-foreground" />
+                <CategoryIcon icon={item.icon} color="#FFFFFF" size="md" className="bg-transparent" />
               </button>
             );
           }
@@ -44,7 +45,7 @@ export function BottomNav({ activeTab, onTabChange, onAddClick }: BottomNavProps
                 isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              <Icon className="h-5 w-5" />
+              <CategoryIcon icon={item.icon} color={isActive ? '#8B5CF6' : '#6B7280'} size="sm" className="bg-transparent" />
               <span className="text-xs font-medium">{item.label}</span>
             </button>
           );

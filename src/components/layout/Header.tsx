@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Bell, Moon, Sun, LogOut, WifiOff } from 'lucide-react';
+import { Bell, Moon, Sun, LogOut, WifiOff, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getGreeting } from '@/lib/formatters';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { useFinance } from '@/contexts/FinanceContext';
 import { Badge } from '@/components/ui/badge';
+
+import { AchievementBadges } from '@/components/dashboard/AchievementBadges';
 
 export function Header() {
   const { theme, toggleTheme } = useTheme();
   const { signOut } = useAuth();
   const { unreadCount, markAllAsRead } = useNotifications();
+  const { exportToPDF } = useFinance();
   const [showGreeting, setShowGreeting] = useState(true);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const greeting = getGreeting();
@@ -60,7 +64,15 @@ export function Header() {
             <h1 className="text-lg font-bold tracking-tight">Anjos Finanças</h1>
           </div>
         </div>
+
+        <div className="hidden sm:block">
+          <AchievementBadges />
+        </div>
+
         <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={exportToPDF} title="Gerar Relatório PDF">
+            <FileText className="h-5 w-5" />
+          </Button>
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
             {theme === 'dark' ? (
               <Sun className="h-5 w-5" />

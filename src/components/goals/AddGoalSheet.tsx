@@ -10,7 +10,7 @@ import {
     SheetTitle,
     SheetFooter,
 } from '@/components/ui/sheet';
-import { Target, Calendar } from 'lucide-react';
+import { Crosshair, Calendar } from 'lucide-react';
 
 interface AddGoalSheetProps {
     open: boolean;
@@ -35,7 +35,7 @@ export function AddGoalSheet({ open, onOpenChange }: AddGoalSheetProps) {
                 targetAmount: Number(targetAmount),
                 currentAmount: 0,
                 deadline: deadline || undefined,
-                icon: 'Target',
+                icon: 'Crosshair',
                 color: '#8B5CF6', // Primary color
             });
             setName('');
@@ -59,7 +59,7 @@ export function AddGoalSheet({ open, onOpenChange }: AddGoalSheetProps) {
                     <div className="space-y-2">
                         <Label htmlFor="name">Nome da Meta</Label>
                         <div className="relative">
-                            <Target className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Crosshair className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
                                 id="name"
                                 placeholder="Ex: Reserva de Emergência"
