@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Bell, Moon, Sun, LogOut, WifiOff, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getGreeting } from '@/lib/formatters';
-import { useTheme } from "next-themes";
+import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { useFinance } from '@/contexts/FinanceContext';
@@ -11,8 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { AchievementBadges } from '@/components/dashboard/AchievementBadges';
 
 export function Header() {
-  const { setTheme, resolvedTheme } = useTheme();
-  const toggleTheme = () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  const { theme, toggleTheme } = useTheme();
   const { signOut } = useAuth();
   const { unreadCount, markAllAsRead } = useNotifications();
   const { exportToPDF } = useFinance();
@@ -39,7 +38,7 @@ export function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-md">
+    <header className="sticky top-0 z-40 glass border-b-0">
       {isOffline && (
         <div className="bg-destructive/10 border-b border-destructive/20 py-1.5 px-4 text-center animate-in slide-in-from-top duration-300">
           <p className="text-[10px] font-bold text-destructive flex items-center justify-center gap-1.5 uppercase tracking-widest">
@@ -75,7 +74,7 @@ export function Header() {
             <FileText className="h-5 w-5" />
           </Button>
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
-            {resolvedTheme === 'dark' ? (
+            {theme === 'dark' ? (
               <Sun className="h-5 w-5" />
             ) : (
               <Moon className="h-5 w-5" />

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ChevronRight, Moon, Sun, User, Shield, Bell, HelpCircle, LogOut, Key, Mail, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { useTheme } from "next-themes";
+import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import {
@@ -44,8 +44,7 @@ function SettingItem({ icon, title, description, action, onClick, destructive }:
 }
 
 export function SettingsSection() {
-  const { setTheme, resolvedTheme } = useTheme();
-  const toggleTheme = () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  const { theme, toggleTheme } = useTheme();
   const { user, signOut, resetPassword } = useAuth();
   const [showSecurity, setShowSecurity] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -64,7 +63,7 @@ export function SettingsSection() {
 
   return (
     <div className="space-y-4">
-      <Card className="shadow-sm border-border/50 bg-card/50 backdrop-blur-sm">
+      <Card className="shadow-sm border-none glass-card">
         <CardContent className="divide-y divide-border/50 p-2">
           <SettingItem
             icon={<User className="h-5 w-5 text-primary" />}
@@ -73,12 +72,12 @@ export function SettingsSection() {
             onClick={() => toast.success(`Logado como: ${user?.email}`)}
           />
           <SettingItem
-            icon={resolvedTheme === 'dark' ? <Moon className="h-5 w-5 text-blue-400" /> : <Sun className="h-5 w-5 text-orange-400" />}
+            icon={theme === 'dark' ? <Moon className="h-5 w-5 text-blue-400" /> : <Sun className="h-5 w-5 text-orange-400" />}
             title="Tema escuro"
             description="Ativar modo noturno"
             action={
               <Switch
-                checked={resolvedTheme === 'dark'}
+                checked={theme === 'dark'}
                 onCheckedChange={toggleTheme}
               />
             }
@@ -99,7 +98,7 @@ export function SettingsSection() {
         </CardContent>
       </Card>
 
-      <Card className="shadow-sm border-border/50 bg-card/50 backdrop-blur-sm">
+      <Card className="shadow-sm border-none glass-card">
         <CardContent className="divide-y divide-border/50 p-2">
           <SettingItem
             icon={<Shield className="h-5 w-5 text-muted-foreground" />}

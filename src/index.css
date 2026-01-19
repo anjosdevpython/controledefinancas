@@ -165,3 +165,21 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .glass {
+    @apply backdrop-blur-md bg-white/70 dark:bg-black/40 border border-white/20 dark:border-white/10;
+  }
+
+  .glass-hover {
+    @apply hover:bg-white/80 dark:hover:bg-black/50 transition-colors duration-200;
+  }
+
+  .glass-card {
+    @apply backdrop-blur-xl bg-card/60 border-white/20 dark:border-white/10 shadow-xl shadow-black/5;
+  }
+
+  .glass-morphism {
+    @apply backdrop-blur-[12px] bg-white/40 dark:bg-black/40 border border-white/20 shadow-[0_8px_32px_0_rgba(31, 38, 135, 0.07)];
+  }
+}

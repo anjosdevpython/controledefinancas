@@ -17,7 +17,7 @@ function StatCard({ title, value, change, icon, variant, loading }: StatCardProp
   const isPositive = change >= 0;
 
   return (
-    <Card className="shadow-sm">
+    <Card className="shadow-sm glass-card border-none">
       <CardContent className="p-4">
         <div className="mb-3 flex items-center justify-between">
           <span className="text-sm text-muted-foreground">{title}</span>

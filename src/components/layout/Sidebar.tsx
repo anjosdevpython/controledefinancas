@@ -20,7 +20,7 @@ export function Sidebar({ activeTab, onTabChange, onAddClick }: SidebarProps) {
     ];
 
     return (
-        <aside className="hidden h-screen w-64 flex-col border-r border-border/50 bg-card/50 backdrop-blur-xl md:flex">
+        <aside className="hidden h-screen w-64 flex-col glass border-r-0 md:flex">
             <div className="flex h-20 items-center gap-3 px-6">
                 <img src="/logo.png" alt="Anjos Finanças" className="h-10 w-10 rounded-xl" />
                 <span className="text-xl font-bold tracking-tight">Anjos Finanças</span>

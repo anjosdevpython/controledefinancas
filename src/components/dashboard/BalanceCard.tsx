@@ -16,7 +16,7 @@ export function BalanceCard() {
   const activeAccount = accounts.find(a => a.id === selectedAccountId);
 
   return (
-    <Card className="overflow-hidden bg-primary text-primary-foreground shadow-lg border-none relative">
+    <Card className="overflow-hidden glass-card shadow-lg border-none relative bg-gradient-to-br from-primary/90 to-primary/70 dark:from-primary/50 dark:to-primary/30 text-primary-foreground">
       <CardContent className="p-6">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
