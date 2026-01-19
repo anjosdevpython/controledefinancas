@@ -12,6 +12,7 @@ interface FinanceContextType {
   categories: Category[];
   loading: boolean;
   addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<void>;
+  updateTransaction: (id: string, transaction: Partial<Transaction>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   addGoal: (goal: Omit<FinancialGoal, 'id'>) => Promise<void>;
   deleteGoal: (id: string) => Promise<void>;
@@ -139,6 +140,39 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       toast.success('Transação excluída.');
     } catch (error: any) {
       toast.error('Erro ao excluir: ' + error.message);
+    }
+  };
+
+  const updateTransaction = async (id: string, updatedFields: Partial<Transaction>) => {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .update({
+          type: updatedFields.type,
+          amount: updatedFields.amount,
+          category_id: updatedFields.category?.id,
+          date: updatedFields.date,
+          description: updatedFields.description,
+          payment_method: updatedFields.paymentMethod,
+        })
+        .eq('id', id)
+        .select();
+
+      if (error) throw error;
+
+      if (data) {
+        setTransactions(prev =>
+          prev.map(t => (t.id === id ? { ...t, ...updatedFields } : t))
+        );
+        toast.success('Transação atualizada!');
+        addNotification({
+          title: 'Transação Atualizada',
+          message: `Sua transação foi corrigida com sucesso.`,
+          type: 'success'
+        });
+      }
+    } catch (error: any) {
+      toast.error('Erro ao atualizar transação: ' + error.message);
     }
   };
 
@@ -278,6 +312,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         categories,
         loading,
         addTransaction,
+        updateTransaction,
         deleteTransaction,
         addGoal,
         deleteGoal,

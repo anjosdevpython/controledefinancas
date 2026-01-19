@@ -18,23 +18,7 @@ import { useFinance } from '@/contexts/FinanceContext';
 import { Target, Plus, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-function DashboardView() {
-  return (
-    <div className="space-y-6 px-4 pb-24 pt-4 md:px-8">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="space-y-6">
-          <BalanceCard />
-          <QuickStats />
-          <InsightCard />
-        </div>
-        <div className="space-y-6">
-          <ExpenseChart />
-          <RecentTransactions />
-        </div>
-      </div>
-    </div>
-  );
-}
+
 
 function StatsView() {
   return (
@@ -91,6 +75,26 @@ function GoalsView({ onAddNew }: { onAddNew: () => void }) {
   );
 }
 
+import { Transaction } from '@/types/finance';
+
+function DashboardView({ onEditTransaction }: { onEditTransaction: (t: Transaction) => void }) {
+  return (
+    <div className="space-y-6 px-4 pb-24 pt-4 md:px-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="space-y-6">
+          <BalanceCard />
+          <QuickStats />
+          <InsightCard />
+        </div>
+        <div className="space-y-6">
+          <ExpenseChart />
+          <RecentTransactions onEdit={onEditTransaction} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SettingsView() {
   return (
     <div className="space-y-6 px-4 pb-24 pt-4 md:px-8">
@@ -109,6 +113,19 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState('home');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isGoalOpen, setIsGoalOpen] = useState(false);
+  const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
+
+  const handleEditTransaction = (transaction: Transaction) => {
+    setTransactionToEdit(transaction);
+    setIsAddOpen(true);
+  };
+
+  const handleAddTransactionOpenChange = (open: boolean) => {
+    setIsAddOpen(open);
+    if (!open) {
+      setTransactionToEdit(null);
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-background text-foreground transition-colors duration-300">
@@ -124,7 +141,7 @@ function AppContent() {
         </div>
 
         <main className="mx-auto w-full max-w-7xl flex-1 overflow-x-hidden">
-          {activeTab === 'home' && <DashboardView />}
+          {activeTab === 'home' && <DashboardView onEditTransaction={handleEditTransaction} />}
           {activeTab === 'stats' && <StatsView />}
           {activeTab === 'goals' && <GoalsView onAddNew={() => setIsGoalOpen(true)} />}
           {activeTab === 'settings' && <SettingsView />}
@@ -139,7 +156,11 @@ function AppContent() {
         </div>
       </div>
 
-      <AddTransactionSheet open={isAddOpen} onOpenChange={setIsAddOpen} />
+      <AddTransactionSheet
+        open={isAddOpen}
+        onOpenChange={handleAddTransactionOpenChange}
+        transactionToEdit={transactionToEdit}
+      />
       <AddGoalSheet open={isGoalOpen} onOpenChange={setIsGoalOpen} />
     </div>
   );
