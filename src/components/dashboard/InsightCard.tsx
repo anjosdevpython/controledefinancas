@@ -1,75 +1,71 @@
-import { Lightbulb, TrendingDown, TrendingUp, AlertTriangle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Sparkles, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useFinance } from '@/contexts/FinanceContext';
-
-const insights = [
-  {
-    type: 'success',
-    icon: TrendingDown,
-    title: 'Ótimo trabalho!',
-    message: 'Seus gastos diminuíram 75% comparado ao mês passado.',
-  },
-  {
-    type: 'warning',
-    icon: AlertTriangle,
-    title: 'Atenção com alimentação',
-    message: 'Você já gastou R$ 89,90 em alimentação este mês.',
-  },
-  {
-    type: 'tip',
-    icon: Lightbulb,
-    title: 'Dica do dia',
-    message: 'Guardar 20% do salário pode ajudar a atingir suas metas mais rápido!',
-  },
-];
+import { getGeminiFinancialTip } from '@/services/gemini';
 
 export function InsightCard() {
-  const { transactions } = useFinance();
+  const { transactions, getFinancialSummary } = useFinance();
+  const [aiTip, setAiTip] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Filter for dynamic insights based on data
-  const hasData = transactions.length > 0;
+  useEffect(() => {
+    const fetchAiTip = async () => {
+      setLoading(true);
+      try {
+        const summary = getFinancialSummary();
+        const tip = await getGeminiFinancialTip(summary);
+        setAiTip(tip);
+      } catch (error) {
+        console.error('Failed to fetch AI tip:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const defaultInsight = {
-    type: 'tip',
-    icon: Lightbulb,
-    title: 'Dica do dia',
-    message: 'Guardar 20% do salário pode ajudar a atingir suas metas mais rápido!',
-  };
+    if (transactions.length > 0) {
+      fetchAiTip();
+    } else {
+      setLoading(false);
+    }
+  }, [transactions.length, getFinancialSummary]); // Refetch if transactions change
 
-  const insight = hasData ? insights[0] : defaultInsight;
-  const Icon = insight.icon;
-
-  if (!hasData) {
+  if (loading) {
     return (
-      <Card className="border-l-4 border-l-primary shadow-sm">
-        <CardContent className="flex items-start gap-3 p-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-secondary-foreground">
-            <Lightbulb className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="font-semibold">{defaultInsight.title}</p>
-            <p className="text-sm text-muted-foreground">{defaultInsight.message}</p>
-          </div>
+      <Card className="border-l-4 border-l-primary shadow-md bg-card/50 backdrop-blur-sm">
+        <CardContent className="flex items-center justify-center p-6 text-center">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <span className="ml-3 text-sm font-medium text-muted-foreground animate-pulse">
+            Anjo Financeiro analisando seus dados...
+          </span>
         </CardContent>
       </Card>
     );
   }
 
+  const hasData = transactions.length > 0;
+
+  const displayTip = aiTip || 'Comece a registrar suas transações para receber dicas personalizadas do seu Anjo Financeiro!';
+  const title = hasData ? 'Dica da IA' : 'Dica do dia';
+
   return (
-    <Card className={`border-l-4 shadow-sm ${insight.type === 'success' ? 'border-l-income' :
-      insight.type === 'warning' ? 'border-l-warning' :
-        'border-l-primary'
-      }`}>
-      <CardContent className="flex items-start gap-3 p-4">
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${insight.type === 'success' ? 'bg-accent text-accent-foreground' :
-          insight.type === 'warning' ? 'bg-warning/10 text-warning' :
-            'bg-secondary text-secondary-foreground'
-          }`}>
-          <Icon className="h-5 w-5" />
+    <Card className="border-l-4 border-l-primary shadow-md bg-card/50 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2 duration-700">
+      <CardContent className="flex items-start gap-4 p-5">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-inner">
+          <Sparkles className="h-6 w-6" />
         </div>
-        <div>
-          <p className="font-semibold">{insight.title}</p>
-          <p className="text-sm text-muted-foreground">{insight.message}</p>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <p className="font-bold text-base tracking-tight">{title}</p>
+            {hasData && (
+              <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-black uppercase text-primary tracking-wider">
+                Gemini AI
+              </span>
+            )}
+          </div>
+          <p className="text-sm leading-relaxed text-muted-foreground italic">
+            "{displayTip}"
+          </p>
         </div>
       </CardContent>
     </Card>

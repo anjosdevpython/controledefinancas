@@ -20,6 +20,7 @@ interface FinanceContextType {
   getTotalExpenses: () => number;
   getBalance: () => number;
   getExpensesByCategory: () => { name: string; value: number; color: string }[];
+  getFinancialSummary: () => string;
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -253,6 +254,22 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     return Object.values(categoryTotals).sort((a, b) => b.value - a.value);
   };
 
+  const getFinancialSummary = () => {
+    const balance = getBalance();
+    const income = getTotalIncome();
+    const expenses = getTotalExpenses();
+    const topCategories = getExpensesByCategory()
+      .slice(0, 3)
+      .map(c => `${c.name}: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(c.value)}`)
+      .join(', ');
+
+    const goalsSummary = goals
+      .map(g => `${g.name}: ${Math.round((g.currentAmount / g.targetAmount) * 100)}% concluído`)
+      .join('; ');
+
+    return `Saldo: ${balance}. Receitas: ${income}. Despesas: ${expenses}. Principais Categorias: ${topCategories}. Metas: ${goalsSummary}.`;
+  };
+
   return (
     <FinanceContext.Provider
       value={{
@@ -269,6 +286,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         getTotalExpenses,
         getBalance,
         getExpensesByCategory,
+        getFinancialSummary,
       }}
     >
       {children}
