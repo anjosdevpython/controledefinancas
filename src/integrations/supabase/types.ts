@@ -19,6 +19,7 @@ export type Database = {
           date: string
           description: string | null
           payment_method: string | null
+          user_id: string | null
         }
         Insert: {
           id?: string
@@ -29,6 +30,7 @@ export type Database = {
           date: string
           description?: string | null
           payment_method?: string | null
+          user_id?: string | null
         }
         Update: {
           id?: string
@@ -39,6 +41,7 @@ export type Database = {
           date?: string
           description?: string | null
           payment_method?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -52,6 +55,7 @@ export type Database = {
           deadline: string | null
           icon: string | null
           color: string | null
+          user_id: string | null
         }
         Insert: {
           id?: string
@@ -62,6 +66,7 @@ export type Database = {
           deadline?: string | null
           icon?: string | null
           color?: string | null
+          user_id?: string | null
         }
         Update: {
           id?: string
@@ -72,6 +77,7 @@ export type Database = {
           deadline?: string | null
           icon?: string | null
           color?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

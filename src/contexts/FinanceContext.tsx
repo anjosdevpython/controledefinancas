@@ -3,6 +3,7 @@ import { Transaction, FinancialGoal, Category } from '@/types/finance';
 import { defaultCategories } from '@/data/categories';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from './AuthContext';
 
 interface FinanceContextType {
   transactions: Transaction[];
@@ -25,14 +26,17 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   const [goals, setGoals] = useState<FinancialGoal[]>([]);
   const [categories] = useState<Category[]>(defaultCategories);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   const fetchData = async () => {
+    if (!user) return;
     try {
       setLoading(true);
 
       const { data: transData, error: transError } = await supabase
         .from('transactions')
         .select('*')
+        .eq('user_id', user.id)
         .order('date', { ascending: false });
 
       if (transError) throw transError;
@@ -49,7 +53,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
       const { data: goalsData, error: goalsError } = await supabase
         .from('goals')
-        .select('*');
+        .select('*')
+        .eq('user_id', user.id);
 
       if (goalsError) throw goalsError;
 
@@ -74,8 +79,13 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (user) {
+      fetchData();
+    } else {
+      setTransactions([]);
+      setGoals([]);
+    }
+  }, [user]);
 
   const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
     try {
@@ -88,6 +98,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
           date: transaction.date,
           description: transaction.description,
           payment_method: transaction.paymentMethod,
+          user_id: user?.id
         }])
         .select();
 
