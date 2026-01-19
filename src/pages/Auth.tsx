@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +14,15 @@ export default function Auth() {
     const [isSignUp, setIsSignUp] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const navigate = useNavigate();
+    const { session } = useAuth();
+
+    // Redirect if already logged in
+    useEffect(() => {
+        if (session) {
+            navigate('/');
+        }
+    }, [session, navigate]);
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -19,19 +30,24 @@ export default function Auth() {
 
         try {
             if (isSignUp) {
-                const { error } = await supabase.auth.signUp({
+                const { error, data } = await supabase.auth.signUp({
                     email,
                     password,
-                    options: {
-                        emailRedirectTo: window.location.origin
-                    }
                 });
                 if (error) throw error;
-                toast.success('Confirme seu e-mail para ativar a conta!');
+
+                // If auto-confirm is on in Supabase, we might have a session immediately
+                if (data?.session) {
+                    toast.success('Conta criada e logada!');
+                    navigate('/');
+                } else {
+                    toast.success('Cadastro realizado!');
+                }
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
                 toast.success('Bem-vindo de volta!');
+                navigate('/');
             }
         } catch (error: any) {
             toast.error(error.message || 'Erro na autenticação');
