@@ -1,4 +1,4 @@
-import { Home, PieChart, PlusCircle, Target, User, BookOpen } from 'lucide-react';
+import { Home, PieChart, PlusCircle, Target, User, BookOpen, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CategoryIcon } from '@/components/shared/CategoryIcon';
 
