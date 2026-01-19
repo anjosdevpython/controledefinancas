@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from './AuthContext';
 import { useNotifications } from './NotificationContext';
+import { localStorageService } from '@/services/localStorageService';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -36,15 +37,21 @@ interface FinanceContextType {
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 
 export function FinanceProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
 
   // --- QUERIES ---
 
   const { data: dbCategories = [], isLoading: loadingCategories } = useQuery({
-    queryKey: ['categories', user?.id],
+    queryKey: ['categories', user?.id, isGuest],
     queryFn: async () => {
+      if (isGuest) {
+        // Retrieve local categories (could implement in localStorageService)
+        // For now, return empty or default is handled below
+        return [];
+      }
+
       if (!user) return [];
       try {
         const { data, error } = await supabase
@@ -63,7 +70,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         return [];
       }
     },
-    enabled: !!user,
+    enabled: !!user || isGuest,
   });
 
   const categories = useMemo(() => {
@@ -73,8 +80,12 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   }, [dbCategories]);
 
   const { data: accounts = [], isLoading: loadingAccounts } = useQuery({
-    queryKey: ['accounts', user?.id],
+    queryKey: ['accounts', user?.id, isGuest],
     queryFn: async () => {
+      if (isGuest) {
+        return localStorageService.getAccounts();
+      }
+
       if (!user) return [];
       try {
         const { data, error } = await supabase
@@ -94,7 +105,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         return [{ id: 'default', name: 'Carteira Principal', type: 'cash', color: '#8B5CF6', balance: 0 }];
       }
     },
-    enabled: !!user,
+    enabled: !!user || isGuest,
   });
 
   const { data: transactions = [], isLoading: loadingTransactions } = useQuery({
@@ -184,25 +195,24 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
   const addTransactionMutation = useMutation({
     mutationFn: async ({ transaction, goalId }: { transaction: Omit<Transaction, 'id'>, goalId?: string }) => {
+      if (isGuest) {
+        return localStorageService.addTransaction(transaction);
+      }
+
       let finalAccountId = transaction.accountId;
 
       // Fix for 'invalid input syntax for type uuid: "default"'
       console.log('DEBUG: accountId before check:', finalAccountId);
       if (finalAccountId === 'default') {
-        console.log('DEBUG: processing default account...');
         const { data: existingAccounts } = await (supabase.from('accounts' as any) as any)
           .select('id')
           .eq('user_id', user?.id)
           .limit(1);
 
-        console.log('DEBUG: existing accounts found:', existingAccounts);
-
         if (existingAccounts && existingAccounts.length > 0) {
           finalAccountId = existingAccounts[0].id;
-          console.log('DEBUG: using existing account:', finalAccountId);
         } else {
           // Create default account if none exists
-          console.log('DEBUG: creating new account...');
           const { data: newAccount, error: createError } = await (supabase.from('accounts' as any) as any)
             .insert([{
               name: 'Carteira Principal',
@@ -219,10 +229,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
             throw createError;
           }
           finalAccountId = newAccount.id;
-          console.log('DEBUG: created new account:', finalAccountId);
         }
       }
-      console.log('DEBUG: final accountId for insert:', finalAccountId);
 
       const { data, error } = await supabase
         .from('transactions')
@@ -241,15 +249,21 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
 
-      if (goalId) {
+      if (goalId && !isGuest) {
+        // Goal updates in Supabase handled by separate mutation or trigger usually, keeping simplistic here
         await updateGoalMutation.mutateAsync({ id: goalId, amount: transaction.amount });
       }
 
       return (data as any[])[0];
     },
     onSuccess: (data, variables) => {
+      // Invalidate both guest and user keys to be safe, though context separates them
       queryClient.invalidateQueries({ queryKey: ['transactions', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['accounts', user?.id] });
+      if (isGuest) {
+        queryClient.invalidateQueries({ queryKey: ['transactions', undefined, true] });
+        queryClient.invalidateQueries({ queryKey: ['accounts', undefined, true] });
+      }
       toast.success('Transação adicionada!');
     },
     onError: (error: any) => {
@@ -260,6 +274,10 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
   const updateTransactionMutation = useMutation({
     mutationFn: async ({ id, fields }: { id: string, fields: Partial<Transaction> }) => {
+      if (isGuest) {
+        return localStorageService.updateTransaction(id, fields);
+      }
+
       const { error } = await supabase
         .from('transactions')
         .update({
@@ -278,12 +296,19 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['accounts', user?.id] });
+      if (isGuest) {
+        queryClient.invalidateQueries({ queryKey: ['transactions', undefined, true] });
+        queryClient.invalidateQueries({ queryKey: ['accounts', undefined, true] });
+      }
       toast.success('Transação atualizada!');
     }
   });
 
   const deleteTransactionMutation = useMutation({
     mutationFn: async (id: string) => {
+      if (isGuest) {
+        return localStorageService.deleteTransaction(id);
+      }
       const { error } = await supabase
         .from('transactions')
         .delete()
@@ -294,12 +319,19 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions', user?.id] });
       queryClient.invalidateQueries({ queryKey: ['accounts', user?.id] });
+      if (isGuest) {
+        queryClient.invalidateQueries({ queryKey: ['transactions', undefined, true] });
+        queryClient.invalidateQueries({ queryKey: ['accounts', undefined, true] });
+      }
       toast.success('Transação excluída.');
     }
   });
 
   const addCategoryMutation = useMutation({
     mutationFn: async (category: Omit<Category, 'id'>) => {
+      if (isGuest) {
+        return localStorageService.addCategory(category);
+      }
       const { data, error } = await (supabase.from('categories' as any) as any)
         .insert([{
           ...category,
@@ -311,6 +343,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories', user?.id] });
+      if (isGuest) queryClient.invalidateQueries({ queryKey: ['categories', undefined, true] });
       toast.success('Categoria criada!');
     }
   });
@@ -349,6 +382,9 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
   const addGoalMutation = useMutation({
     mutationFn: async (goal: Omit<FinancialGoal, 'id'>) => {
+      if (isGuest) {
+        return localStorageService.addGoal(goal);
+      }
       const { data, error } = await supabase
         .from('goals')
         .insert([{
@@ -367,6 +403,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goals', user?.id] });
+      if (isGuest) queryClient.invalidateQueries({ queryKey: ['goals', undefined, true] });
       toast.success('Meta criada!');
     }
   });
@@ -388,6 +425,18 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
   const updateGoalMutation = useMutation({
     mutationFn: async ({ id, amount, subGoalId }: { id: string, amount: number, subGoalId?: string }) => {
+      if (isGuest) {
+        // Limited goal update for guest (just amount)
+        // Assuming simple update for now or implementing full logic in service if critical
+        // For now, let's just handle amount update
+        const goal = goals.find(g => g.id === id);
+        if (goal) {
+          localStorageService.updateGoal(id, { currentAmount: Math.min(goal.currentAmount + amount, goal.targetAmount) });
+          return { goalName: goal.name, addedAmount: amount, newProgress: ((goal.currentAmount + amount) / goal.targetAmount) * 100 };
+        }
+        return;
+      }
+
       const goal = goals.find(g => g.id === id);
       if (!goal) return;
 
@@ -422,6 +471,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['goals', user?.id] });
+      if (isGuest) queryClient.invalidateQueries({ queryKey: ['goals', undefined, true] });
       if (data) {
         // Milestone logic
         const progress = data.newProgress;

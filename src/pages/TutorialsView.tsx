@@ -1,12 +1,11 @@
-```javascript
 import React, { useEffect } from 'react';
-import { 
-  BookOpen, 
-  Wallet, 
-  Target, 
-  Sparkles, 
-  FileText, 
-  PlusCircle, 
+import {
+  BookOpen,
+  Wallet,
+  Target,
+  Sparkles,
+  FileText,
+  PlusCircle,
   ScanLine,
   Play
 } from 'lucide-react';
@@ -22,7 +21,7 @@ export default function TutorialsView() {
     const isMobile = window.innerWidth < 768;
     const addBtnSelector = isMobile ? '#mobile-add-transaction' : '#sidebar-add-transaction';
     const goalsSelector = isMobile ? '#mobile-goals' : '#sidebar-goals';
-    
+
     // We navigate to home first to ensure elements are present for the tour (optional strategy)
     // But since the elements are global (Sidebar/BottomNav), we can highlight them from here.
 
@@ -33,41 +32,41 @@ export default function TutorialsView() {
       nextBtnText: 'Próximo',
       prevBtnText: 'Anterior',
       steps: [
-        { 
-          element: '#sidebar-home', 
-          popover: { 
-            title: 'Visão Geral', 
-            description: 'Aqui no Início você vê seu saldo, receitas e despesas do mês.', 
-            side: 'right', 
-            align: 'start' 
-          } 
+        {
+          element: '#sidebar-home',
+          popover: {
+            title: 'Visão Geral',
+            description: 'Aqui no Início você vê seu saldo, receitas e despesas do mês.',
+            side: 'right',
+            align: 'start'
+          }
         },
-        { 
-          element: addBtnSelector, 
-          popover: { 
-            title: 'Nova Transação', 
-            description: 'Clique aqui para adicionar uma Receita ou Despesa. Lembre-se, o valor é formatado automaticamente!', 
-            side: isMobile ? 'top' : 'right', 
-            align: 'start' 
-          } 
+        {
+          element: addBtnSelector,
+          popover: {
+            title: 'Nova Transação',
+            description: 'Clique aqui para adicionar uma Receita ou Despesa. Lembre-se, o valor é formatado automaticamente!',
+            side: isMobile ? 'top' : 'right',
+            align: 'start'
+          }
         },
-        { 
-          element: goalsSelector, 
-          popover: { 
-            title: 'Metas', 
-            description: 'Defina objetivos financeiros (ex: Viagem, Carro) e acompanhe seu progresso.', 
-            side: isMobile ? 'top' : 'right', 
-            align: 'start' 
-          } 
+        {
+          element: goalsSelector,
+          popover: {
+            title: 'Metas',
+            description: 'Defina objetivos financeiros (ex: Viagem, Carro) e acompanhe seu progresso.',
+            side: isMobile ? 'top' : 'right',
+            align: 'start'
+          }
         },
-        { 
-          element: '#sidebar-tutorials', 
-          popover: { 
-            title: 'Central de Ajuda', 
-            description: 'Sempre que tiver dúvidas, volte aqui para ver tutoriais ou reiniciar este tour.', 
-            side: isMobile ? 'top' : 'right', 
-            align: 'start' 
-          } 
+        {
+          element: '#sidebar-tutorials',
+          popover: {
+            title: 'Central de Ajuda',
+            description: 'Sempre que tiver dúvidas, volte aqui para ver tutoriais ou reiniciar este tour.',
+            side: isMobile ? 'top' : 'right',
+            align: 'start'
+          }
         },
       ]
     });
@@ -254,7 +253,7 @@ export default function TutorialsView() {
           </Card>
         </TabsContent>
       </Tabs>
-      
+
       <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 mt-8 text-center">
         <h3 className="font-bold text-lg mb-2">Ainda tem dúvidas?</h3>
         <p className="text-muted-foreground text-sm">
@@ -264,4 +263,3 @@ export default function TutorialsView() {
     </div>
   );
 }
-```

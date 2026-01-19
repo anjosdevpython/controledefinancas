@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Bell, Moon, Sun, LogOut, WifiOff, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getGreeting } from '@/lib/formatters';
-import { useTheme } from '@/hooks/useTheme';
+import { useTheme } from "next-themes";
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { useFinance } from '@/contexts/FinanceContext';
@@ -11,7 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { AchievementBadges } from '@/components/dashboard/AchievementBadges';
 
 export function Header() {
-  const { theme, toggleTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
+  const toggleTheme = () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
   const { signOut } = useAuth();
   const { unreadCount, markAllAsRead } = useNotifications();
   const { exportToPDF } = useFinance();
@@ -74,7 +75,7 @@ export function Header() {
             <FileText className="h-5 w-5" />
           </Button>
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
-            {theme === 'dark' ? (
+            {resolvedTheme === 'dark' ? (
               <Sun className="h-5 w-5" />
             ) : (
               <Moon className="h-5 w-5" />

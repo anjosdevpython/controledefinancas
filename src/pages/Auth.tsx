@@ -16,7 +16,7 @@ export default function Auth() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
-    const { session } = useAuth();
+    const { session, enterGuestMode } = useAuth();
 
     // Redirect if already logged in
     useEffect(() => {
@@ -69,7 +69,11 @@ export default function Auth() {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+        <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12 relative overflow-hidden">
+            {/* Ambient Background Effects */}
+            <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-blue-500/10 blur-[100px] pointer-events-none" />
+
             <div className="w-full max-w-md space-y-8 animate-in fade-in zoom-in duration-500">
                 <div className="flex flex-col items-center text-center">
                     <img src="/logo.png" alt="Anjos Finanças Logo" className="h-16 w-16 rounded-2xl shadow-xl transition-transform hover:scale-110" />
@@ -166,6 +170,23 @@ export default function Auth() {
                             </Button>
                         </CardFooter>
                     </form>
+                    <div className="px-6 pb-6 pt-2 w-full">
+                        <div className="relative mb-4">
+                            <div className="absolute inset-0 flex items-center">
+                                <span className="w-full border-t" />
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-background px-2 text-muted-foreground">Ou</span>
+                            </div>
+                        </div>
+                        <Button
+                            variant="outline"
+                            className="w-full border-dashed"
+                            onClick={enterGuestMode}
+                        >
+                            Continuar sem conta (Modo Offline)
+                        </Button>
+                    </div>
                 </Card>
             </div>
         </div>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ChevronRight, Moon, Sun, User, Shield, Bell, HelpCircle, LogOut, Key, Mail, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { useTheme } from '@/hooks/useTheme';
+import { useTheme } from "next-themes";
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import {
@@ -44,7 +44,8 @@ function SettingItem({ icon, title, description, action, onClick, destructive }:
 }
 
 export function SettingsSection() {
-  const { theme, toggleTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
+  const toggleTheme = () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
   const { user, signOut, resetPassword } = useAuth();
   const [showSecurity, setShowSecurity] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -72,12 +73,12 @@ export function SettingsSection() {
             onClick={() => toast.success(`Logado como: ${user?.email}`)}
           />
           <SettingItem
-            icon={theme === 'dark' ? <Moon className="h-5 w-5 text-blue-400" /> : <Sun className="h-5 w-5 text-orange-400" />}
+            icon={resolvedTheme === 'dark' ? <Moon className="h-5 w-5 text-blue-400" /> : <Sun className="h-5 w-5 text-orange-400" />}
             title="Tema escuro"
             description="Ativar modo noturno"
             action={
               <Switch
-                checked={theme === 'dark'}
+                checked={resolvedTheme === 'dark'}
                 onCheckedChange={toggleTheme}
               />
             }
