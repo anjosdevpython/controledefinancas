@@ -10,12 +10,46 @@ import { Lock, Loader2, ArrowRight } from 'lucide-react';
 
 export default function ResetPassword() {
     const [loading, setLoading] = useState(false);
+    const [checkingSession, setCheckingSession] = useState(true);
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const navigate = useNavigate();
 
+    useEffect(() => {
+        const checkSession = async () => {
+            // Check for errors in the URL hash (e.g., otp_expired)
+            const hash = window.location.hash;
+            if (hash.includes('error=')) {
+                const params = new URLSearchParams(hash.replace('#', '?'));
+                const errorDesc = params.get('error_description');
+                if (errorDesc) {
+                    toast.error(`Link inválido: ${errorDesc.replace(/\+/g, ' ')}`);
+                    setCheckingSession(false);
+                    setTimeout(() => navigate('/auth'), 3000);
+                    return;
+                }
+            }
+
+            // Check if we have an active session (recovery link signs user in)
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (!session) {
+                toast.error('Sessão de recuperação não encontrada. Solicite um novo link.');
+                setTimeout(() => navigate('/auth'), 2000);
+            }
+            setCheckingSession(false);
+        };
+
+        checkSession();
+    }, [navigate]);
+
     const handleResetPassword = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (password.length < 6) {
+            toast.error('A senha deve ter pelo menos 6 caracteres');
+            return;
+        }
 
         if (password !== confirmPassword) {
             toast.error('As senhas não coincidem');
@@ -29,6 +63,8 @@ export default function ResetPassword() {
             if (error) throw error;
 
             toast.success('Senha atualizada com sucesso!');
+            // Log out user for them to sign in with new password
+            await supabase.auth.signOut();
             navigate('/auth');
         } catch (error: any) {
             toast.error(error.message || 'Erro ao atualizar senha');
@@ -36,6 +72,14 @@ export default function ResetPassword() {
             setLoading(false);
         }
     };
+
+    if (checkingSession) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
