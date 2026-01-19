@@ -2,6 +2,7 @@ import { ArrowUpRight, ArrowDownRight, Percent } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/formatters';
 import { useFinance } from '@/contexts/FinanceContext';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface StatCardProps {
   title: string;
@@ -9,9 +10,10 @@ interface StatCardProps {
   change: number;
   icon: React.ReactNode;
   variant: 'income' | 'expense' | 'neutral';
+  loading?: boolean;
 }
 
-function StatCard({ title, value, change, icon, variant }: StatCardProps) {
+function StatCard({ title, value, change, icon, variant, loading }: StatCardProps) {
   const isPositive = change >= 0;
 
   return (
@@ -26,17 +28,29 @@ function StatCard({ title, value, change, icon, variant }: StatCardProps) {
             {icon}
           </div>
         </div>
-        <p className="text-xl font-bold">{value}</p>
+
+        {loading ? (
+          <Skeleton className="h-7 w-24 mb-2" />
+        ) : (
+          <p className="text-xl font-bold">{value}</p>
+        )}
+
         <div className="mt-2 flex items-center gap-1 text-xs">
-          {isPositive ? (
-            <ArrowUpRight className="h-3 w-3 text-income" />
+          {loading ? (
+            <Skeleton className="h-3 w-16" />
           ) : (
-            <ArrowDownRight className="h-3 w-3 text-expense" />
+            <>
+              {isPositive ? (
+                <ArrowUpRight className="h-3 w-3 text-income" />
+              ) : (
+                <ArrowDownRight className="h-3 w-3 text-expense" />
+              )}
+              <span className={isPositive ? 'text-income' : 'text-expense'}>
+                {Math.abs(change)}%
+              </span>
+              <span className="text-muted-foreground ml-0.5">vs mês anterior</span>
+            </>
           )}
-          <span className={isPositive ? 'text-income' : 'text-expense'}>
-            {Math.abs(change)}%
-          </span>
-          <span className="text-muted-foreground">vs mês anterior</span>
         </div>
       </CardContent>
     </Card>
@@ -44,7 +58,7 @@ function StatCard({ title, value, change, icon, variant }: StatCardProps) {
 }
 
 export function QuickStats() {
-  const { getTotalIncome, getTotalExpenses } = useFinance();
+  const { getTotalIncome, getTotalExpenses, loading } = useFinance();
 
   const income = getTotalIncome();
   const expenses = getTotalExpenses();
@@ -57,6 +71,7 @@ export function QuickStats() {
         change={0}
         icon={<ArrowUpRight className="h-4 w-4" />}
         variant="income"
+        loading={loading}
       />
       <StatCard
         title="Despesas"
@@ -64,6 +79,7 @@ export function QuickStats() {
         change={0}
         icon={<ArrowDownRight className="h-4 w-4" />}
         variant="expense"
+        loading={loading}
       />
     </div>
   );

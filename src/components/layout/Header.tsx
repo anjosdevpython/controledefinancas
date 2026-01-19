@@ -1,27 +1,48 @@
 import { useState, useEffect } from 'react';
-import { Bell, Moon, Sun, LogOut } from 'lucide-react';
+import { Bell, Moon, Sun, LogOut, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getGreeting } from '@/lib/formatters';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { Badge } from '@/components/ui/badge';
 
 export function Header() {
   const { theme, toggleTheme } = useTheme();
   const { signOut } = useAuth();
   const { unreadCount, markAllAsRead } = useNotifications();
   const [showGreeting, setShowGreeting] = useState(true);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const greeting = getGreeting();
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowGreeting(false);
     }, 4000); // 4 seconds
-    return () => clearTimeout(timer);
+
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-md">
+      {isOffline && (
+        <div className="bg-destructive/10 border-b border-destructive/20 py-1.5 px-4 text-center animate-in slide-in-from-top duration-300">
+          <p className="text-[10px] font-bold text-destructive flex items-center justify-center gap-1.5 uppercase tracking-widest">
+            <WifiOff className="h-3 w-3 animate-pulse" />
+            Você está offline. Suas alterações serão enviadas quando a conexão voltar.
+          </p>
+        </div>
+      )}
       <div className="flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-3">
           <img src="/logo.png" alt="Anjos Finanças Logo" className="h-10 w-10 rounded-lg object-contain" />

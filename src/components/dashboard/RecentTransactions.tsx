@@ -2,6 +2,7 @@ import { ChevronRight, Edit2, Search, FilterX } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
   SelectContent,
@@ -22,7 +23,7 @@ interface RecentTransactionsProps {
 }
 
 export function RecentTransactions({ onSeeAll, onEdit, showAll = false }: RecentTransactionsProps) {
-  const { transactions, categories } = useFinance();
+  const { transactions, categories, loading } = useFinance();
   const {
     searchQuery,
     setSearchQuery,
@@ -148,7 +149,18 @@ export function RecentTransactions({ onSeeAll, onEdit, showAll = false }: Recent
       </CardHeader>
       <CardContent className="px-4 pb-4">
         <div className="space-y-3">
-          {displayTransactions.length === 0 ? (
+          {loading ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 p-2.5">
+                <Skeleton className="h-10 w-10 rounded-xl" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="h-5 w-20" />
+              </div>
+            ))
+          ) : displayTransactions.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-sm text-muted-foreground italic">Nenhuma transação encontrada.</p>
               {hasActiveFilters && (
