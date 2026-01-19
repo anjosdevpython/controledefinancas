@@ -16,7 +16,7 @@ export default function Auth() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
-    const { session, enterGuestMode } = useAuth();
+    const { session } = useAuth();
 
     // Redirect if already logged in
     useEffect(() => {
@@ -170,23 +170,7 @@ export default function Auth() {
                             </Button>
                         </CardFooter>
                     </form>
-                    <div className="px-6 pb-6 pt-2 w-full">
-                        <div className="relative mb-4">
-                            <div className="absolute inset-0 flex items-center">
-                                <span className="w-full border-t" />
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-background px-2 text-muted-foreground">Ou</span>
-                            </div>
-                        </div>
-                        <Button
-                            variant="outline"
-                            className="w-full border-dashed"
-                            onClick={enterGuestMode}
-                        >
-                            Continuar sem conta (Modo Offline)
-                        </Button>
-                    </div>
+    // Removed offline mode option
                 </Card>
             </div>
         </div>
