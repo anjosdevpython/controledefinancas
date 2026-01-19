@@ -27,13 +27,9 @@ import { FinancialCalendar } from '@/components/dashboard/FinancialCalendar';
 function HomeView() {
   return (
     <div className="space-y-6 px-4 pb-24 pt-4 md:px-8">
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
-        <div className="md:col-span-8">
-          <BalanceCard />
-        </div>
-        <div className="md:col-span-4">
-          <QuickStats />
-        </div>
+      <div className="flex flex-col gap-6">
+        <BalanceCard />
+        <QuickStats />
       </div>
     </div>
   );
