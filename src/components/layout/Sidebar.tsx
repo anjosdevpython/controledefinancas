@@ -30,6 +30,7 @@ export function Sidebar({ activeTab, onTabChange, onAddClick }: SidebarProps) {
                 {menuItems.map((item) => (
                     <button
                         key={item.id}
+                        id={`sidebar-${item.id}`} // Targeted by Driver.js
                         onClick={() => onTabChange(item.id)}
                         className={cn(
                             'flex w-full items-center gap-3 rounded-xl px-4 py-3 transition-all',
@@ -46,6 +47,7 @@ export function Sidebar({ activeTab, onTabChange, onAddClick }: SidebarProps) {
 
             <div className="px-4 py-6">
                 <button
+                    id="sidebar-add-transaction" // Targeted by Driver.js
                     onClick={onAddClick}
                     className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-4 font-bold text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >

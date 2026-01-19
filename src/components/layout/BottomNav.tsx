@@ -18,37 +18,41 @@ const navItems = [
   { id: 'settings', label: 'Perfil', icon: 'User', color: '#A9A9A9' }, // Assuming a color for 'settings'
 ];
 
+const LucideIcons = { Home, PieChart, PlusCircle, Target, User, BookOpen, Sparkles };
+
 export function BottomNav({ activeTab, onTabChange, onAddClick }: BottomNavProps) {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card pb-safe">
       <div className="mx-auto flex h-16 max-w-lg items-center justify-around px-2">
         {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
+          const Icon = (LucideIcons as any)[item.icon];
 
-          if (item.isAction) {
+          if (item.id === 'add') {
             return (
-              <button
-                key={item.id}
-                onClick={onAddClick}
-                className="flex h-14 w-14 -translate-y-4 items-center justify-center rounded-full bg-primary shadow-lg transition-transform hover:scale-105 active:scale-95"
-              >
-                <CategoryIcon icon={item.icon} color="#FFFFFF" size="md" className="bg-transparent" />
-              </button>
+              <div key={item.id} className="relative -top-5">
+                <button
+                  id="mobile-add-transaction" // Targeted by Driver.js
+                  onClick={onAddClick}
+                  className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-transform active:scale-95"
+                >
+                  <Icon size={24} />
+                </button>
+              </div>
             );
           }
 
           return (
             <button
               key={item.id}
+              id={`mobile-${item.id}`} // Targeted by Driver.js
               onClick={() => onTabChange(item.id)}
               className={cn(
-                'flex flex-1 flex-col items-center gap-1 py-2 transition-colors',
-                isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                'flex flex-col items-center justify-center gap-1 transition-colors',
+                activeTab === item.id ? 'text-primary' : 'text-muted-foreground'
               )}
             >
-              <CategoryIcon icon={item.icon} color={isActive ? '#8B5CF6' : '#6B7280'} size="sm" className="bg-transparent" />
-              <span className="text-xs font-medium">{item.label}</span>
+              <Icon size={20} className={cn(activeTab === item.id && 'fill-current opacity-20')} />
+              <span className="text-[10px] font-medium">{item.label}</span>
             </button>
           );
         })}
