@@ -1,13 +1,14 @@
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const GEMINI_MODEL = 'gemini-1.5-flash';
 
 export async function getGeminiFinancialTip(financialData: string): Promise<string> {
-    if (!GEMINI_API_KEY) {
-        console.error('Gemini API Key is missing');
-        return 'Configure sua chave de API para receber dicas personalizadas.';
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+    if (!apiKey || apiKey === '...' || apiKey.includes('SUA_CHAVE')) {
+        console.error('Gemini API Key is missing or invalid');
+        return 'Chave de API do Gemini não configurada. Adicione VITE_GEMINI_API_KEY às variáveis de ambiente do seu projeto (Vercel/Netlify).';
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
 
     const prompt = `
     Você é um assistente financeiro inteligente e motivador chamado "Anjo Financeiro".
@@ -45,13 +46,19 @@ export async function getGeminiFinancialTip(financialData: string): Promise<stri
         });
 
         if (!response.ok) {
-            throw new Error(`Gemini API error: ${response.statusText}`);
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Gemini API Details:', errorData);
+            throw new Error(`Erro ${response.status}: ${errorData?.error?.message || response.statusText}`);
         }
 
         const data = await response.json();
-        return data.candidates[0].content.parts[0].text;
-    } catch (error) {
+        if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+            return data.candidates[0].content.parts[0].text;
+        }
+
+        throw new Error('Resposta da IA em formato inesperado.');
+    } catch (error: any) {
         console.error('Error fetching Gemini tip:', error);
-        return 'Não foi possível gerar uma dica personalizada no momento. Continue focado em suas metas!';
+        return `Ops! O Anjo Financeiro teve um problema: ${error.message}. Verifique a chave da API.`;
     }
 }
