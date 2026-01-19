@@ -51,7 +51,14 @@ export function Sidebar({ activeTab, onTabChange, onAddClick }: SidebarProps) {
             </div>
 
             <div className="px-6 py-6 transition-opacity hover:opacity-100 opacity-60">
-                <p className="text-xs text-muted-foreground">© 2026 Anjos Finanças</p>
+                <a
+                    href="https://allananjos.dev.br/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                >
+                    © 2026 Allan Anjos
+                </a>
             </div>
         </aside>
     );
