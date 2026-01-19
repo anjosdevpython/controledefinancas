@@ -12,6 +12,7 @@ import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 export default function Auth() {
     const [loading, setLoading] = useState(false);
     const [isSignUp, setIsSignUp] = useState(false);
+    const [isForgotPassword, setIsForgotPassword] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
@@ -29,14 +30,20 @@ export default function Auth() {
         setLoading(true);
 
         try {
-            if (isSignUp) {
+            if (isForgotPassword) {
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/reset-password`,
+                });
+                if (error) throw error;
+                toast.success('Link de recuperação enviado para seu e-mail!');
+                setIsForgotPassword(false);
+            } else if (isSignUp) {
                 const { error, data } = await supabase.auth.signUp({
                     email,
                     password,
                 });
                 if (error) throw error;
 
-                // If auto-confirm is on in Supabase, we might have a session immediately
                 if (data?.session) {
                     toast.success('Conta criada e logada!');
                     navigate('/');
@@ -54,6 +61,11 @@ export default function Auth() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const getTitle = () => {
+        if (isForgotPassword) return 'Recuperar senha';
+        return isSignUp ? 'Criar sua conta' : 'Acesse o Anjos Finanças';
     };
 
     return (
